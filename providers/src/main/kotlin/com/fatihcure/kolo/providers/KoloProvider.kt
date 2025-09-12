@@ -118,27 +118,4 @@ class KoloProvider {
     fun getAllConversionPairs(): Set<Pair<KClass<*>, KClass<*>>> {
         return factory.getAllConversionPairs()
     }
-
-    // Legacy methods for backward compatibility
-
-    /**
-     * Creates a Kolo instance for converting from OpenAI to Anthropic
-     */
-    fun createOpenAIToAnthropic(): Kolo<OpenAIRequest, AnthropicRequest> {
-        return createKolo(OpenAIRequest::class, AnthropicRequest::class)
-    }
-
-    /**
-     * Creates a Kolo instance for converting from Anthropic to OpenAI
-     */
-    fun createAnthropicToOpenAI(): Kolo<AnthropicRequest, OpenAIRequest> {
-        return createKolo(AnthropicRequest::class, OpenAIRequest::class)
-    }
-
-    /**
-     * Creates a bidirectional Kolo instance for OpenAI and Anthropic
-     */
-    fun createOpenAIAnthropicBidirectional(): BidirectionalKolo<OpenAIRequest, AnthropicRequest> {
-        return createBidirectionalKolo(OpenAIRequest::class, AnthropicRequest::class)
-    }
 }
