@@ -16,10 +16,10 @@ dependencies {
     implementation(libs.jackson.module.kotlin)
     implementation(libs.jackson.core)
     implementation(libs.jackson.databind)
-    
+
     // Kotlin coroutines for streaming
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // Testing
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.assertj.core)

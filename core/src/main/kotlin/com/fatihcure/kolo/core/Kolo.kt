@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  */
 class Kolo<SourceType, TargetType>(
     private val sourceNormalizer: Normalizer<SourceType>,
-    private val targetTransformer: Transformer<TargetType>
+    private val targetTransformer: Transformer<TargetType>,
 ) {
     /**
      * Converts a request from source format to target format
@@ -25,21 +25,21 @@ class Kolo<SourceType, TargetType>(
 class KoloBuilder<SourceType, TargetType> {
     private var sourceNormalizer: Normalizer<SourceType>? = null
     private var targetTransformer: Transformer<TargetType>? = null
-    
+
     fun withSourceNormalizer(normalizer: Normalizer<SourceType>): KoloBuilder<SourceType, TargetType> {
         this.sourceNormalizer = normalizer
         return this
     }
-    
+
     fun withTargetTransformer(transformer: Transformer<TargetType>): KoloBuilder<SourceType, TargetType> {
         this.targetTransformer = transformer
         return this
     }
-    
+
     fun build(): Kolo<SourceType, TargetType> {
         require(sourceNormalizer != null) { "Source normalizer is required" }
         require(targetTransformer != null) { "Target transformer is required" }
-        
+
         return Kolo(sourceNormalizer!!, targetTransformer!!)
     }
 }
@@ -49,7 +49,7 @@ class KoloBuilder<SourceType, TargetType> {
  */
 fun <SourceType, TargetType> kolo(
     sourceNormalizer: Normalizer<SourceType>,
-    targetTransformer: Transformer<TargetType>
+    targetTransformer: Transformer<TargetType>,
 ): Kolo<SourceType, TargetType> {
     return Kolo(sourceNormalizer, targetTransformer)
 }
@@ -68,7 +68,7 @@ class BidirectionalKolo<SourceType, TargetType>(
     private val sourceNormalizer: Normalizer<SourceType>,
     private val targetNormalizer: Normalizer<TargetType>,
     private val sourceTransformer: Transformer<SourceType>,
-    private val targetTransformer: Transformer<TargetType>
+    private val targetTransformer: Transformer<TargetType>,
 ) {
     /**
      * Converts a request from source format to target format
@@ -77,7 +77,7 @@ class BidirectionalKolo<SourceType, TargetType>(
         val intermittentRequest = sourceNormalizer.normalizeRequest(sourceRequest)
         return targetTransformer.transformRequest(intermittentRequest)
     }
-    
+
     /**
      * Converts a response from target format to source format
      */
@@ -85,7 +85,7 @@ class BidirectionalKolo<SourceType, TargetType>(
         val intermittentResponse = targetNormalizer.normalizeResponse(targetResponse)
         return sourceTransformer.transformResponse(intermittentResponse)
     }
-    
+
     /**
      * Converts a streaming response from target format to source format
      */
@@ -93,7 +93,7 @@ class BidirectionalKolo<SourceType, TargetType>(
         val intermittentStream = targetNormalizer.normalizeStreamingResponse(targetStream)
         return sourceTransformer.transformStreamingResponse(intermittentStream)
     }
-    
+
     /**
      * Converts an error from target format to source format
      */
@@ -111,38 +111,38 @@ class BidirectionalKoloBuilder<SourceType, TargetType> {
     private var targetNormalizer: Normalizer<TargetType>? = null
     private var sourceTransformer: Transformer<SourceType>? = null
     private var targetTransformer: Transformer<TargetType>? = null
-    
+
     fun withSourceNormalizer(normalizer: Normalizer<SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.sourceNormalizer = normalizer
         return this
     }
-    
+
     fun withTargetNormalizer(normalizer: Normalizer<TargetType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.targetNormalizer = normalizer
         return this
     }
-    
+
     fun withSourceTransformer(transformer: Transformer<SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.sourceTransformer = transformer
         return this
     }
-    
+
     fun withTargetTransformer(transformer: Transformer<TargetType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.targetTransformer = transformer
         return this
     }
-    
+
     fun build(): BidirectionalKolo<SourceType, TargetType> {
         require(sourceNormalizer != null) { "Source normalizer is required" }
         require(targetNormalizer != null) { "Target normalizer is required" }
         require(sourceTransformer != null) { "Source transformer is required" }
         require(targetTransformer != null) { "Target transformer is required" }
-        
+
         return BidirectionalKolo(
             sourceNormalizer!!,
             targetNormalizer!!,
             sourceTransformer!!,
-            targetTransformer!!
+            targetTransformer!!,
         )
     }
 }
@@ -154,7 +154,7 @@ fun <SourceType, TargetType> bidirectionalKolo(
     sourceNormalizer: Normalizer<SourceType>,
     targetNormalizer: Normalizer<TargetType>,
     sourceTransformer: Transformer<SourceType>,
-    targetTransformer: Transformer<TargetType>
+    targetTransformer: Transformer<TargetType>,
 ): BidirectionalKolo<SourceType, TargetType> {
     return BidirectionalKolo(sourceNormalizer, targetNormalizer, sourceTransformer, targetTransformer)
 }

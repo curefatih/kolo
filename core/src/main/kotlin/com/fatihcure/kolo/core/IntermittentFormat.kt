@@ -16,7 +16,7 @@ data class IntermittentMessage(
     val role: MessageRole,
     val content: String,
     val name: String? = null,
-    val metadata: Map<String, Any>? = null
+    val metadata: Map<String, Any>? = null,
 )
 
 /**
@@ -25,15 +25,15 @@ data class IntermittentMessage(
 enum class MessageRole {
     @JsonProperty("system")
     SYSTEM,
-    
+
     @JsonProperty("user")
     USER,
-    
+
     @JsonProperty("assistant")
     ASSISTANT,
-    
+
     @JsonProperty("tool")
-    TOOL
+    TOOL,
 }
 
 /**
@@ -49,7 +49,7 @@ data class IntermittentRequest(
     val presencePenalty: Double? = null,
     val stop: List<String>? = null,
     val stream: Boolean = false,
-    val metadata: Map<String, Any>? = null
+    val metadata: Map<String, Any>? = null,
 )
 
 /**
@@ -60,7 +60,7 @@ data class IntermittentResponse(
     val model: String,
     val choices: List<IntermittentChoice>,
     val usage: IntermittentUsage? = null,
-    val metadata: Map<String, Any>? = null
+    val metadata: Map<String, Any>? = null,
 )
 
 /**
@@ -70,7 +70,7 @@ data class IntermittentChoice(
     val index: Int,
     val message: IntermittentMessage? = null,
     val delta: IntermittentDelta? = null,
-    val finishReason: String? = null
+    val finishReason: String? = null,
 )
 
 /**
@@ -79,7 +79,7 @@ data class IntermittentChoice(
 data class IntermittentDelta(
     val role: MessageRole? = null,
     val content: String? = null,
-    val name: String? = null
+    val name: String? = null,
 )
 
 /**
@@ -88,7 +88,7 @@ data class IntermittentDelta(
 data class IntermittentUsage(
     val promptTokens: Int,
     val completionTokens: Int,
-    val totalTokens: Int
+    val totalTokens: Int,
 )
 
 /**
@@ -99,7 +99,7 @@ data class IntermittentError(
     val message: String,
     val code: String? = null,
     val param: String? = null,
-    val metadata: Map<String, Any>? = null
+    val metadata: Map<String, Any>? = null,
 )
 
 /**
@@ -110,28 +110,28 @@ data class IntermittentError(
     JsonSubTypes.Type(value = IntermittentStreamEvent.MessageStart::class, name = "message_start"),
     JsonSubTypes.Type(value = IntermittentStreamEvent.MessageDelta::class, name = "message_delta"),
     JsonSubTypes.Type(value = IntermittentStreamEvent.MessageEnd::class, name = "message_end"),
-    JsonSubTypes.Type(value = IntermittentStreamEvent.Error::class, name = "error")
+    JsonSubTypes.Type(value = IntermittentStreamEvent.Error::class, name = "error"),
 )
 sealed class IntermittentStreamEvent {
     data class MessageStart(
         val id: String,
         val model: String,
-        val metadata: Map<String, Any>? = null
+        val metadata: Map<String, Any>? = null,
     ) : IntermittentStreamEvent()
-    
+
     data class MessageDelta(
         val delta: IntermittentDelta,
-        val metadata: Map<String, Any>? = null
+        val metadata: Map<String, Any>? = null,
     ) : IntermittentStreamEvent()
-    
+
     data class MessageEnd(
         val finishReason: String? = null,
         val usage: IntermittentUsage? = null,
-        val metadata: Map<String, Any>? = null
+        val metadata: Map<String, Any>? = null,
     ) : IntermittentStreamEvent()
-    
+
     data class Error(
         val error: IntermittentError,
-        val metadata: Map<String, Any>? = null
+        val metadata: Map<String, Any>? = null,
     ) : IntermittentStreamEvent()
 }
