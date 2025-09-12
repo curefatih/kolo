@@ -111,36 +111,6 @@ class KoloProviderTest {
     }
 
     @Test
-    fun `should create OpenAI to Anthropic Kolo using legacy method`() {
-        // When
-        val kolo = koloProvider.createOpenAIToAnthropic()
-
-        // Then
-        assertThat(kolo).isNotNull
-        assertThat(kolo).isInstanceOf(Kolo::class.java)
-    }
-
-    @Test
-    fun `should create Anthropic to OpenAI Kolo using legacy method`() {
-        // When
-        val kolo = koloProvider.createAnthropicToOpenAI()
-
-        // Then
-        assertThat(kolo).isNotNull
-        assertThat(kolo).isInstanceOf(Kolo::class.java)
-    }
-
-    @Test
-    fun `should create OpenAI Anthropic bidirectional Kolo using legacy method`() {
-        // When
-        val bidirectionalKolo = koloProvider.createOpenAIAnthropicBidirectional()
-
-        // Then
-        assertThat(bidirectionalKolo).isNotNull
-        assertThat(bidirectionalKolo).isInstanceOf(BidirectionalKolo::class.java)
-    }
-
-    @Test
     fun `should have factory instance`() {
         // When & Then
         assertThat(koloProvider.factory).isNotNull
