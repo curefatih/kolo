@@ -12,4 +12,8 @@ plugins {
 }
 
 rootProject.name = "kolo"
-include("lib")
+
+include(":core")
+include(":normalizers")
+include(":transformers")
+include(":providers")
