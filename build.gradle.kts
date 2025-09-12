@@ -87,8 +87,8 @@ subprojects {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/curefatih/kolo")
                 credentials {
-                    username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USERNAME")
-                    password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_TOKEN")
+                    username = System.getenv("GPR_USERNAME")
+                    password = System.getenv("GPR_TOKEN")
                 }
             }
         }
