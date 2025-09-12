@@ -5,6 +5,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     id("com.diffplug.spotless") version "6.25.0"
+    id("maven-publish") apply false
 }
 
 allprojects {
@@ -18,6 +19,7 @@ allprojects {
 
 subprojects {
     apply(plugin = "com.diffplug.spotless")
+    apply(plugin = "maven-publish")
     
     spotless {
         kotlin {
@@ -43,6 +45,52 @@ subprojects {
             target("**/*.md", "**/.gitignore")
             trimTrailingWhitespace()
             endWithNewline()
+        }
+    }
+    
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["java"])
+                
+                pom {
+                    name.set(project.name)
+                    description.set("Kolo - A Kotlin library for LLM providers and transformation")
+                    url.set("https://github.com/curefatih/kolo")
+                    
+                    licenses {
+                        license {
+                            name.set("Apache License 2.0")
+                            url.set("https://opensource.org/licenses/Apache-2.0")
+                        }
+                    }
+                    
+                    developers {
+                        developer {
+                            id.set("curefatih")
+                            name.set("Fatih Cure")
+                            email.set("hello@fatihcure.com")
+                        }
+                    }
+                    
+                    scm {
+                        connection.set("scm:git:git://github.com/curefatih/kolo.git")
+                        developerConnection.set("scm:git:ssh://github.com:curefatih/kolo.git")
+                        url.set("https://github.com/curefatih/kolo")
+                    }
+                }
+            }
+        }
+        
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/fatihcure/kolo")
+                credentials {
+                    username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USERNAME")
+                    password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_TOKEN")
+                }
+            }
         }
     }
 }
