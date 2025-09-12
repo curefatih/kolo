@@ -43,10 +43,10 @@ jobs:
           ./gradlew --version
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --no-configuration-cache
 
       - name: Publish to GitHub Packages
-        run: ./gradlew publish
+        run: ./gradlew publish --no-configuration-cache
         env:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}

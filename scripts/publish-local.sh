@@ -28,13 +28,13 @@ if [ -z "$GITHUB_USERNAME" ]; then
 fi
 
 echo "📦 Building project..."
-./gradlew clean build
+./gradlew clean build --no-configuration-cache
 
 echo "🧪 Running tests..."
-./gradlew test
+./gradlew test --no-configuration-cache
 
 echo "📤 Publishing to GitHub Packages..."
-./gradlew publish -Pgpr.user="$GITHUB_USERNAME" -Pgpr.key="$GITHUB_TOKEN"
+./gradlew publish --no-configuration-cache -Pgpr.user="$GITHUB_USERNAME" -Pgpr.key="$GITHUB_TOKEN"
 
 # Versions are static for now
 echo "✅ Successfully published to GitHub Packages!"
