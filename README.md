@@ -42,91 +42,26 @@ With this approach, the number of conversions drops from *N × (N-1)* to just *2
 
 ---
 
-## Example Flow
+## Documentation
 
-Imagine you have:
+📖 **[Complete Documentation](docs/README.md)** - Comprehensive guides and API reference
 
-* **Your tooling:** Supports OpenAI’s Chat Completions API.
-* **Your backend provider:** Anthropic Claude.
+- **[Usage Guide](docs/usage-guide.md)** - Step-by-step instructions and examples
 
-### Without this library:
+## Quick Start
 
-* You’d have to manually translate OpenAI → Anthropic, and Anthropic → OpenAI.
+```kotlin
+// Add dependencies
+dependencies {
+    implementation("com.fatihcure.kolo:providers:1.0.0")
+    implementation("com.fatihcure.kolo:normalizers:1.0.0")
+    implementation("com.fatihcure.kolo:transformers:1.0.0")
+}
 
-### With this library:
-
-1. **Incoming request:**
-
-   * Tool sends an OpenAI-style request.
-   * Library normalizes it into the intermittent format.
-2. **Outgoing to provider:**
-
-   * Library transforms intermittent format into Anthropic’s request format.
-   * Sends request to Anthropic.
-3. **Incoming response:**
-
-   * Anthropic’s response is normalized to intermittent format.
-4. **Outgoing to tool:**
-
-   * Library transforms intermittent format into OpenAI-style response.
-   * Tool receives exactly what it expects, as if it talked to OpenAI.
-
----
-
-## Streaming Support
-
-The library also supports **streaming responses**, which many LLM APIs implement differently.
-
-* The intermittent format defines a standard event structure (`delta`, `message_start`, `message_end`).
-* Providers’ streaming events are normalized into this structure.
-* The library can then re-stream them in the target provider’s event format.
-
-This allows tools that expect OpenAI’s streaming protocol (`delta` events) to work seamlessly with Anthropic’s or any other provider’s streaming responses.
-
----
-
-## Architecture Overview
-
-```
-             ┌───────────────┐
-             │   Your Tool   │
-             │ (OpenAI API)  │
-             └───────┬───────┘
-                     │ OpenAI-format request
-                     ▼
-             ┌───────────────┐
-             │ Normalizer    │
-             │ (OpenAI → IF) │
-             └───────┬───────┘
-                     │ Intermittent Format (IF)
-                     ▼
-             ┌───────────────┐
-             │ Transformer   │
-             │ (IF → Anthro) │
-             └───────┬───────┘
-                     │ Anthropic-format request
-                     ▼
-             ┌───────────────┐
-             │   Provider    │
-             │   (Claude)    │
-             └───────┬───────┘
-                     │ Anthropic response
-                     ▼
-             ┌───────────────┐
-             │ Normalizer    │
-             │ (Anthro → IF) │
-             └───────┬───────┘
-                     │ Intermittent Format (IF)
-                     ▼
-             ┌───────────────┐
-             │ Transformer   │
-             │ (IF → OpenAI) │
-             └───────┬───────┘
-                     │ OpenAI-format response
-                     ▼
-             ┌───────────────┐
-             │   Your Tool   │
-             └───────────────┘
+// Basic usage
+val provider = KoloProvider()
+val kolo = provider.createKolo<OpenAIRequest, AnthropicRequest>()
+val converted = kolo.convertRequest(openAIRequest)
 ```
 
 ---
