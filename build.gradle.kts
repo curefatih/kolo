@@ -5,7 +5,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     id("com.diffplug.spotless") version "6.25.0"
-    id("maven-publish") apply false
 }
 
 allprojects {
@@ -20,6 +19,7 @@ allprojects {
 subprojects {
     apply(plugin = "com.diffplug.spotless")
     apply(plugin = "maven-publish")
+    apply(plugin = "java-library")
     
     spotless {
         kotlin {
@@ -48,7 +48,7 @@ subprojects {
         }
     }
     
-    publishing {
+    configure<PublishingExtension> {
         publications {
             create<MavenPublication>("maven") {
                 from(components["java"])
@@ -85,7 +85,7 @@ subprojects {
         repositories {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/fatihcure/kolo")
+                url = uri("https://maven.pkg.github.com/curefatih/kolo")
                 credentials {
                     username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USERNAME")
                     password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_TOKEN")

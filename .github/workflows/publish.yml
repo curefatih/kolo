@@ -36,6 +36,12 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      - name: Verify Gradle wrapper
+        run: |
+          ls -la gradle/wrapper/
+          file gradle/wrapper/gradle-wrapper.jar
+          ./gradlew --version
+
       - name: Run tests
         run: ./gradlew test
 
