@@ -40,8 +40,8 @@ class DefaultDataBuffer : DataBuffer {
                 val jsonPart = remaining.substring(6)
                 val openBraces = jsonPart.count { it == '{' }
                 val closeBraces = jsonPart.count { it == '}' }
-                if (openBraces == closeBraces) {
-                    remaining
+                if (openBraces > 0 && openBraces == closeBraces) {
+                    jsonPart
                 } else {
                     null
                 }
