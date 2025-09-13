@@ -7,16 +7,17 @@ package com.fatihcure.kolo.core
 interface DataBufferFactory {
     /**
      * Creates a new DataBuffer instance.
+     * @param config The streaming configuration to use for the buffer
      * @return A new DataBuffer instance
      */
-    fun createBuffer(): DataBuffer
+    fun createBuffer(config: StreamingConfig): DataBuffer
 }
 
 /**
  * Default implementation of DataBufferFactory that creates DefaultDataBuffer instances.
  */
 class DefaultDataBufferFactory : DataBufferFactory {
-    override fun createBuffer(): DataBuffer {
-        return DefaultDataBuffer()
+    override fun createBuffer(config: StreamingConfig): DataBuffer {
+        return DefaultDataBuffer(config)
     }
 }

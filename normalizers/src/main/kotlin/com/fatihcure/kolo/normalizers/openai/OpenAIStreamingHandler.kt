@@ -22,7 +22,7 @@ class OpenAIStreamingHandler(
      */
     fun processStreamingData(rawStream: Flow<String>): Flow<OpenAIStreamingResponse> {
         return flow {
-            val dataBuffer = config.dataBufferFactory.createBuffer()
+            val dataBuffer = config.dataBufferFactory.createBuffer(config)
 
             rawStream.collect { rawData ->
                 val completeChunks = dataBuffer.addChunk(rawData)

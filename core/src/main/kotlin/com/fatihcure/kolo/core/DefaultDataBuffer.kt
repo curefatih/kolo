@@ -4,23 +4,31 @@ package com.fatihcure.kolo.core
  * Default implementation of DataBuffer for handling streaming data
  * This implementation handles Server-Sent Events (SSE) format with "data: " prefix
  */
-class DefaultDataBuffer : DataBuffer {
-    private val buffer = StringBuilder()
+class DefaultDataBuffer(
+    config: StreamingConfig = StreamingConfig(),
+) : AbstractDataBuffer(config) {
 
     override fun addChunk(data: String): List<String> {
+        // Check if adding this data would exceed the maximum buffer size
+        if (buffer.length + data.length > config.maxBufferSize) {
+            // If buffer is already at or near max size, clear it to prevent memory issues
+            buffer.clear()
+        }
+
         buffer.append(data)
         val completeChunks = mutableListOf<String>()
 
+        val chunkSeparator = getChunkSeparator()
         var currentIndex = 0
         while (currentIndex < buffer.length) {
-            val nextDoubleNewline = buffer.indexOf("\n\n", currentIndex)
-            if (nextDoubleNewline != -1) {
-                val chunk = buffer.substring(currentIndex, nextDoubleNewline + 2)
+            val nextSeparator = buffer.indexOf(chunkSeparator, currentIndex)
+            if (nextSeparator != -1) {
+                val chunk = buffer.substring(currentIndex, nextSeparator + chunkSeparator.length)
                 val processedChunk = processChunk(chunk)
                 if (processedChunk != null) {
                     completeChunks.add(processedChunk)
                 }
-                currentIndex = nextDoubleNewline + 2
+                currentIndex = nextSeparator + chunkSeparator.length
             } else {
                 break
             }

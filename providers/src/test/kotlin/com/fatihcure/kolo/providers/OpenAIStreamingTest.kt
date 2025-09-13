@@ -63,7 +63,7 @@ class OpenAIStreamingTest {
     fun `test streaming with custom data buffer`() = runBlocking {
         val provider = OpenAIProvider(
             OpenAIProviderConfig.withDataBufferFactory(object : com.fatihcure.kolo.core.DataBufferFactory {
-                override fun createBuffer(): com.fatihcure.kolo.core.DataBuffer = DefaultDataBuffer()
+                override fun createBuffer(config: com.fatihcure.kolo.core.StreamingConfig): com.fatihcure.kolo.core.DataBuffer = DefaultDataBuffer(config)
             }),
         )
 
@@ -86,7 +86,7 @@ class OpenAIStreamingTest {
 
     @Test
     fun `test data buffer with partial chunks`() = runBlocking {
-        val buffer = DefaultDataBuffer()
+        val buffer = DefaultDataBuffer(com.fatihcure.kolo.core.StreamingConfig())
 
         // Test truly incomplete chunk (missing closing brace and newlines)
         val partialChunk = """data: {"id":"chatcmpl-C42qMU7","object":"chat.completion.chunk","created":1755080278,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":"fp_34a54111","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":"AAatV4uAp"
@@ -145,7 +145,7 @@ class OpenAIStreamingTest {
     @Test
     fun `test streaming with custom data buffer factory`() = runBlocking {
         val customFactory = object : com.fatihcure.kolo.core.DataBufferFactory {
-            override fun createBuffer(): com.fatihcure.kolo.core.DataBuffer = DefaultDataBuffer()
+            override fun createBuffer(config: com.fatihcure.kolo.core.StreamingConfig): com.fatihcure.kolo.core.DataBuffer = DefaultDataBuffer(config)
         }
         val provider = OpenAIProvider(OpenAIProviderConfig.withDataBufferFactory(customFactory))
 
