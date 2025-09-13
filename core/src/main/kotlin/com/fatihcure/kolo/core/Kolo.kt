@@ -12,7 +12,7 @@ class Kolo<SourceType, TargetType>(
     private val targetTransformer: Transformer<TargetType>,
 ) {
     val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
-    
+
     /**
      * Converts a request from source format to target format
      */
@@ -20,7 +20,7 @@ class Kolo<SourceType, TargetType>(
         val intermittentRequest = sourceNormalizer.normalizeRequest(sourceRequest)
         return targetTransformer.transformRequest(intermittentRequest)
     }
-    
+
     /**
      * Converts a request from JSON string to target format
      */
@@ -28,7 +28,7 @@ class Kolo<SourceType, TargetType>(
         val sourceRequest = objectMapper.readValue(json, T::class.java)
         return convertRequest(sourceRequest as SourceType)
     }
-    
+
     /**
      * Converts a request from source format to JSON string
      */
@@ -89,6 +89,7 @@ class BidirectionalKolo<SourceType, TargetType>(
     private val targetTransformer: Transformer<TargetType>,
 ) {
     val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+
     /**
      * Converts a request from source format to target format
      */
@@ -120,7 +121,7 @@ class BidirectionalKolo<SourceType, TargetType>(
         val intermittentError = targetNormalizer.normalizeError(targetError)
         return sourceTransformer.transformError(intermittentError)
     }
-    
+
     /**
      * Converts a request from JSON string to target format
      */
@@ -128,21 +129,21 @@ class BidirectionalKolo<SourceType, TargetType>(
         val sourceRequest = objectMapper.readValue(json, T::class.java)
         return convertRequest(sourceRequest as SourceType)
     }
-    
+
     /**
      * Converts a request from source format to JSON string
      */
     fun convertRequestToJson(sourceRequest: SourceType): String {
         return objectMapper.writeValueAsString(sourceRequest)
     }
-    
+
     /**
      * Converts a response from target format to JSON string
      */
     fun convertResponseToJson(targetResponse: TargetType): String {
         return objectMapper.writeValueAsString(targetResponse)
     }
-    
+
     /**
      * Converts a response from JSON string to source format
      */
@@ -150,7 +151,7 @@ class BidirectionalKolo<SourceType, TargetType>(
         val targetResponse = objectMapper.readValue(json, T::class.java)
         return convertResponse(targetResponse as TargetType)
     }
-    
+
     /**
      * Converts a streaming response from target format to JSON string
      */
@@ -159,14 +160,14 @@ class BidirectionalKolo<SourceType, TargetType>(
             objectMapper.writeValueAsString(response)
         }
     }
-    
+
     /**
      * Converts an error from target format to JSON string
      */
     fun convertErrorToJson(targetError: TargetType): String {
         return objectMapper.writeValueAsString(targetError)
     }
-    
+
     /**
      * Converts an error from JSON string to source format
      */
@@ -238,4 +239,3 @@ fun <SourceType, TargetType> bidirectionalKolo(
 fun <SourceType, TargetType> bidirectionalKoloBuilder(): BidirectionalKoloBuilder<SourceType, TargetType> {
     return BidirectionalKoloBuilder()
 }
-
