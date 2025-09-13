@@ -15,7 +15,6 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class OpenAIProviderTest {
 
@@ -23,7 +22,7 @@ class OpenAIProviderTest {
 
     @BeforeEach
     fun setUp() {
-        openAIProvider = OpenAIProvider()
+        openAIProvider = OpenAIProvider(config = OpenAIProviderConfig.default())
     }
 
     @Test
@@ -145,7 +144,7 @@ class OpenAIProviderTest {
     }
 
     @Test
-    fun `should throw exception when normalizing streaming response`() {
+    fun `should normalize streaming response`() = runBlocking {
         // Given
         val openAIResponse = OpenAIResponse(
             id = "test-id",
@@ -154,16 +153,17 @@ class OpenAIProviderTest {
         )
         val stream = flowOf(openAIResponse)
 
-        // When & Then
-        assertThrows<UnsupportedOperationException> {
-            runBlocking {
-                openAIProvider.normalizeStreamingResponse(stream).first()
-            }
-        }
+        // When
+        val result = openAIProvider.normalizeStreamingResponse(stream).first()
+
+        // Then
+        assertThat(result).isInstanceOf(IntermittentStreamEvent.MessageEnd::class.java)
+        val messageEnd = result as IntermittentStreamEvent.MessageEnd
+        assertThat(messageEnd.finishReason).isEqualTo("stop")
     }
 
     @Test
-    fun `should transform streaming response with empty response`() = runBlocking {
+    fun `should transform streaming response with message start`() = runBlocking {
         // Given
         val streamEvent = IntermittentStreamEvent.MessageStart("test-id", "gpt-3.5-turbo")
         val stream = flowOf(streamEvent)
@@ -173,8 +173,8 @@ class OpenAIProviderTest {
 
         // Then
         assertThat(result).isNotNull
-        assertThat(result.id).isEmpty()
-        assertThat(result.model).isEmpty()
+        assertThat(result.id).isEqualTo("test-id")
+        assertThat(result.model).isEqualTo("gpt-3.5-turbo")
         assertThat(result.choices).isEmpty()
         assertThat(result.usage).isNull()
     }

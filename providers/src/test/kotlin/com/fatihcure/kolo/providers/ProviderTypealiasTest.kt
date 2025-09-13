@@ -13,7 +13,7 @@ class ProviderTypealiasTest {
     @Test
     fun `should verify Provider typealias works correctly`() {
         // Given
-        val openAIProvider = OpenAIProvider()
+        val openAIProvider = OpenAIProvider(config = OpenAIProviderConfig.default())
         val anthropicProvider = AnthropicProvider()
 
         // When & Then
@@ -27,7 +27,7 @@ class ProviderTypealiasTest {
     @Test
     fun `should verify providers implement correct generic types`() {
         // Given
-        val openAIProvider = OpenAIProvider()
+        val openAIProvider = OpenAIProvider(config = OpenAIProviderConfig.default())
         val anthropicProvider = AnthropicProvider()
 
         // When & Then
