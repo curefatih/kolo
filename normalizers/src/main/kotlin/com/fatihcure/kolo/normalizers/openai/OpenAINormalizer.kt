@@ -17,13 +17,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * Normalizer for OpenAI API requests and responses
- */
-
-/**
  * Normalizer implementation for OpenAI API
  */
-class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<OpenAIResponse>, StreamingNormalizer<OpenAIStreamEvent>, ErrorNormalizer<OpenAIError> {
+class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<OpenAIResponse>, StreamingNormalizer<OpenAIStreamingResponse>, ErrorNormalizer<OpenAIError> {
 
     override fun normalizeRequest(request: OpenAIRequest): IntermittentRequest {
         return IntermittentRequest(
@@ -48,30 +44,30 @@ class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<Op
         )
     }
 
-    override fun normalizeStreamingResponse(stream: Flow<OpenAIStreamEvent>): Flow<IntermittentStreamEvent> {
-        return stream.map { event ->
+    override fun normalizeStreamingResponse(stream: Flow<OpenAIStreamingResponse>): Flow<IntermittentStreamEvent> {
+        return stream.map { response ->
             when {
-                event.error != null -> IntermittentStreamEvent.Error(
-                    error = normalizeError(event.error!!),
+                response.error != null -> IntermittentStreamEvent.Error(
+                    error = normalizeError(response.error!!),
                 )
-                event.choices?.isNotEmpty() == true -> {
-                    val choice = event.choices.first()
+                response.choices?.isNotEmpty() == true -> {
+                    val choice = response.choices.first()
                     when {
-                        choice.delta != null -> IntermittentStreamEvent.MessageDelta(
-                            delta = normalizeDelta(choice.delta!!),
+                        choice.delta != null && choice.delta.role != null -> IntermittentStreamEvent.MessageStart(
+                            id = response.id ?: "",
+                            model = response.model ?: "",
                         )
-                        choice.message != null -> IntermittentStreamEvent.MessageStart(
-                            id = event.id ?: "",
-                            model = event.model ?: "",
+                        choice.delta != null && choice.delta.content != null -> IntermittentStreamEvent.MessageDelta(
+                            delta = normalizeStreamingDelta(choice.delta!!),
                         )
                         choice.finishReason != null -> IntermittentStreamEvent.MessageEnd(
                             finishReason = choice.finishReason,
-                            usage = event.usage?.let { normalizeUsage(it) },
+                            usage = response.usage?.let { normalizeUsage(it) },
                         )
-                        else -> throw IllegalArgumentException("Unknown OpenAI stream event type")
+                        else -> throw IllegalArgumentException("Unknown OpenAI streaming response type")
                     }
                 }
-                else -> throw IllegalArgumentException("Unknown OpenAI stream event type")
+                else -> throw IllegalArgumentException("Unknown OpenAI streaming response type")
             }
         }
     }
@@ -129,6 +125,22 @@ class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<Op
             promptTokens = usage.promptTokens,
             completionTokens = usage.completionTokens,
             totalTokens = usage.totalTokens,
+        )
+    }
+
+    internal fun normalizeStreamingDelta(delta: OpenAIStreamingDelta): IntermittentDelta {
+        return IntermittentDelta(
+            role = delta.role?.let {
+                when (it.lowercase()) {
+                    "system" -> MessageRole.SYSTEM
+                    "user" -> MessageRole.USER
+                    "assistant" -> MessageRole.ASSISTANT
+                    "tool" -> MessageRole.TOOL
+                    else -> throw IllegalArgumentException("Unknown OpenAI delta role: $it")
+                }
+            },
+            content = delta.content,
+            name = delta.name,
         )
     }
 }
