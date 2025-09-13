@@ -34,7 +34,23 @@ class DefaultDataBuffer : DataBuffer {
     }
 
     override fun getRemainingData(): String? {
-        return if (buffer.isNotEmpty()) buffer.toString() else null
+        return if (buffer.isNotEmpty()) {
+            val remaining = buffer.toString()
+            if (remaining.startsWith("data: ") && remaining.contains("{") && remaining.contains("}")) {
+                val jsonPart = remaining.substring(6)
+                val openBraces = jsonPart.count { it == '{' }
+                val closeBraces = jsonPart.count { it == '}' }
+                if (openBraces == closeBraces) {
+                    remaining
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        } else {
+            null
+        }
     }
 
     override fun clear() {
