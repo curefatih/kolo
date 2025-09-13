@@ -12,9 +12,11 @@ data class OpenAIStreamingResponse @JsonCreator constructor(
     @JsonProperty("created") val created: Long? = null,
     @JsonProperty("model") val model: String? = null,
     @JsonProperty("system_fingerprint") val systemFingerprint: String? = null,
+    @JsonProperty("service_tier") val serviceTier: String? = null,
     @JsonProperty("choices") val choices: List<OpenAIStreamingChoice>? = null,
     @JsonProperty("usage") val usage: OpenAIUsage? = null,
     @JsonProperty("error") val error: OpenAIError? = null,
+    @JsonProperty("obfuscation") val obfuscation: String? = null,
 )
 
 /**
