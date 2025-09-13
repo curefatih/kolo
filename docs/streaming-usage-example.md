@@ -52,11 +52,15 @@ import com.fatihcure.kolo.providers.OpenAIProviderConfig
 import com.fatihcure.kolo.core.DefaultDataBuffer
 
 fun main() = runBlocking {
-    // Create custom data buffer
-    val customBuffer = DefaultDataBuffer()
+    // Create a factory for your custom data buffer
+    val customBufferFactory = object : com.fatihcure.kolo.core.DataBufferFactory {
+        override fun createBuffer(): com.fatihcure.kolo.core.DataBuffer {
+            return DefaultDataBuffer() // Or your custom implementation
+        }
+    }
     
     // Create provider with custom configuration
-    val config = OpenAIProviderConfig.withDataBuffer(customBuffer)
+    val config = OpenAIProviderConfig.withDataBufferFactory(customBufferFactory)
     val provider = OpenAIProvider(config)
     
     // Use the provider as before
