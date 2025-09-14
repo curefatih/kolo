@@ -28,13 +28,9 @@ class OpenAIStreamingHandler(
                 val completeChunks = dataBuffer.addChunk(rawData)
 
                 for (chunk in completeChunks) {
-                    try {
-                        val streamingResponse = parseChunkToStreamingResponse(chunk)
-                        if (streamingResponse != null) {
-                            emit(streamingResponse)
-                        }
-                    } catch (e: Exception) {
-                        emit(createErrorStreamingResponse("Failed to parse chunk: ${e.message}"))
+                    val streamingResponse = parseChunkToStreamingResponse(chunk)
+                    if (streamingResponse != null) {
+                        emit(streamingResponse)
                     }
                 }
             }
