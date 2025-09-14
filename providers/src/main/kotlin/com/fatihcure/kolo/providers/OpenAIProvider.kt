@@ -21,7 +21,6 @@ import com.fatihcure.kolo.normalizers.openai.OpenAIUsage
 import com.fatihcure.kolo.normalizers.openai.createOpenAIStreamingHandler
 import com.fatihcure.kolo.transformers.openai.OpenAITransformer
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 /**
@@ -149,14 +148,8 @@ class OpenAIProvider(
      * @return Flow of IntermittentStreamEvent objects
      */
     fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
-        return flow {
-            streamingHandler.processStreamingData(rawStream).collect { streamingResponse ->
-                val normalizedEvent = normalizer.normalizeStreamingResponse(flow { emit(streamingResponse) })
-                normalizedEvent.collect { event ->
-                    emit(event)
-                }
-            }
-        }
+        val streamingResponses = streamingHandler.processStreamingData(rawStream)
+        return normalizer.normalizeStreamingResponse(streamingResponses)
     }
 
     /**
