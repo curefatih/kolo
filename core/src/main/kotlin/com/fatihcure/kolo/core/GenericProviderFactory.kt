@@ -44,7 +44,18 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
         val targetTransformer = registry.getTransformer<TargetType, TargetType, TargetType>(targetType)
             ?: throw IllegalArgumentException("No transformer found for target type: ${targetType.simpleName}")
 
-        return BidirectionalKolo(sourceNormalizer, targetNormalizer, sourceTransformer, targetTransformer)
+        // Try to get streaming transformers if available
+        val sourceStreamingTransformer = registry.getStreamingTransformer<SourceType>(sourceType)
+        val targetStreamingTransformer = registry.getStreamingTransformer<TargetType>(targetType)
+
+        return BidirectionalKolo(
+            sourceNormalizer,
+            targetNormalizer,
+            sourceTransformer,
+            targetTransformer,
+            sourceStreamingTransformer,
+            targetStreamingTransformer,
+        )
     }
 
     /**

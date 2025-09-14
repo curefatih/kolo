@@ -11,6 +11,8 @@ class BidirectionalKolo<SourceType, TargetType>(
     private val targetNormalizer: Normalizer<TargetType>,
     private val sourceTransformer: Transformer<SourceType, SourceType, SourceType>,
     private val targetTransformer: Transformer<TargetType, TargetType, TargetType>,
+    private val sourceStreamingTransformer: StreamingTransformer<SourceType>? = null,
+    private val targetStreamingTransformer: StreamingTransformer<TargetType>? = null,
 ) {
     companion object {
         val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
@@ -34,12 +36,24 @@ class BidirectionalKolo<SourceType, TargetType>(
 
     /**
      * Converts a streaming response from target format to source format
-     * Note: This method requires streaming transformers to be available
+     *
+     * @param targetStream the streaming response from target format
+     * @return the converted streaming response in source format
+     * @throws UnsupportedOperationException if streaming transformers are not available
      */
     fun convertStreamingResponse(targetStream: Flow<TargetType>): Flow<SourceType> {
-        // This would need to be implemented with streaming transformers
-        // For now, we'll throw an exception to indicate this needs proper implementation
-        throw UnsupportedOperationException("Streaming conversion requires separate streaming transformers")
+        requireNotNull(targetStreamingTransformer) {
+            "Target streaming transformer is required for streaming conversion"
+        }
+        requireNotNull(sourceStreamingTransformer) {
+            "Source streaming transformer is required for streaming conversion"
+        }
+
+        // First normalize the target stream to intermittent format
+        val intermittentStream = targetNormalizer.normalizeStreamingResponse(targetStream)
+
+        // Then transform the intermittent stream to source format
+        return sourceStreamingTransformer.transformStreamingResponse(intermittentStream)
     }
 
     /**

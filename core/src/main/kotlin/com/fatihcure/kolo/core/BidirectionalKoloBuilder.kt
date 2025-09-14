@@ -7,6 +7,8 @@ class BidirectionalKoloBuilder<SourceType, TargetType> {
     private var targetNormalizer: Normalizer<TargetType>? = null
     private var sourceTransformer: Transformer<SourceType, SourceType, SourceType>? = null
     private var targetTransformer: Transformer<TargetType, TargetType, TargetType>? = null
+    private var sourceStreamingTransformer: StreamingTransformer<SourceType>? = null
+    private var targetStreamingTransformer: StreamingTransformer<TargetType>? = null
 
     fun withSourceNormalizer(normalizer: Normalizer<SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.sourceNormalizer = normalizer
@@ -28,6 +30,16 @@ class BidirectionalKoloBuilder<SourceType, TargetType> {
         return this
     }
 
+    fun withSourceStreamingTransformer(transformer: StreamingTransformer<SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
+        this.sourceStreamingTransformer = transformer
+        return this
+    }
+
+    fun withTargetStreamingTransformer(transformer: StreamingTransformer<TargetType>): BidirectionalKoloBuilder<SourceType, TargetType> {
+        this.targetStreamingTransformer = transformer
+        return this
+    }
+
     fun build(): BidirectionalKolo<SourceType, TargetType> {
         require(sourceNormalizer != null) { "Source normalizer is required" }
         require(targetNormalizer != null) { "Target normalizer is required" }
@@ -39,6 +51,8 @@ class BidirectionalKoloBuilder<SourceType, TargetType> {
             targetNormalizer!!,
             sourceTransformer!!,
             targetTransformer!!,
+            sourceStreamingTransformer,
+            targetStreamingTransformer,
         )
     }
 }
@@ -51,8 +65,17 @@ fun <SourceType, TargetType> bidirectionalKolo(
     targetNormalizer: Normalizer<TargetType>,
     sourceTransformer: Transformer<SourceType, SourceType, SourceType>,
     targetTransformer: Transformer<TargetType, TargetType, TargetType>,
+    sourceStreamingTransformer: StreamingTransformer<SourceType>? = null,
+    targetStreamingTransformer: StreamingTransformer<TargetType>? = null,
 ): BidirectionalKolo<SourceType, TargetType> {
-    return BidirectionalKolo(sourceNormalizer, targetNormalizer, sourceTransformer, targetTransformer)
+    return BidirectionalKolo(
+        sourceNormalizer,
+        targetNormalizer,
+        sourceTransformer,
+        targetTransformer,
+        sourceStreamingTransformer,
+        targetStreamingTransformer,
+    )
 }
 
 /**
