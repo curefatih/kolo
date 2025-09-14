@@ -105,7 +105,7 @@ class KoloJsonTest {
         val jsonResult = kolo.convertRequestToJson(sourceRequest)
 
         // Parse the JSON to verify it contains the expected structure
-        val parsedRequest = kolo.objectMapper.readValue(jsonResult, String::class.java)
+        val parsedRequest = Kolo.objectMapper.readValue(jsonResult, String::class.java)
         assertThat(parsedRequest).isEqualTo("Hello from source")
     }
 
@@ -195,7 +195,7 @@ class KoloJsonTest {
         val jsonResult = bidirectionalKolo.convertResponseToJson(targetResponse)
 
         // Parse the JSON to verify it contains the expected structure
-        val parsedResponse = bidirectionalKolo.objectMapper.readValue(jsonResult, String::class.java)
+        val parsedResponse = BidirectionalKolo.objectMapper.readValue(jsonResult, String::class.java)
         assertThat(parsedResponse).isEqualTo("Hello from target")
     }
 }

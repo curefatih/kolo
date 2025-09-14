@@ -12,7 +12,9 @@ class BidirectionalKolo<SourceType, TargetType>(
     private val sourceTransformer: Transformer<SourceType, SourceType, SourceType>,
     private val targetTransformer: Transformer<TargetType, TargetType, TargetType>,
 ) {
-    val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+    companion object {
+        val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+    }
 
     /**
      * Converts a request from source format to target format
