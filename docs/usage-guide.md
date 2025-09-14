@@ -28,9 +28,9 @@ First, add the Kolo library to your project dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.fatihcure.kolo:providers:1.0.0")
-    implementation("com.fatihcure.kolo:normalizers:1.0.0")
-    implementation("com.fatihcure.kolo:transformers:1.0.0")
+    implementation("com.fatihcure.kolo:providers:1.1.0")
+    implementation("com.fatihcure.kolo:normalizers:1.1.0")
+    implementation("com.fatihcure.kolo:transformers:1.1.0")
 }
 ```
 

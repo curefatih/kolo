@@ -5,10 +5,10 @@ This guide explains how to publish the Kolo library to GitHub Packages.
 ## Overview
 
 The project is configured to publish all modules to GitHub Packages:
-- `com.fatihcure.kolo:core:1.0.0`
-- `com.fatihcure.kolo:normalizers:1.0.0`
-- `com.fatihcure.kolo:transformers:1.0.0`
-- `com.fatihcure.kolo:providers:1.0.0`
+- `com.fatihcure.kolo:core:1.1.0`
+- `com.fatihcure.kolo:normalizers:1.1.0`
+- `com.fatihcure.kolo:transformers:1.1.0`
+- `com.fatihcure.kolo:providers:1.1.0`
 
 ## Prerequisites
 
@@ -107,10 +107,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.fatihcure.kolo:core:1.0.0")
-    implementation("com.fatihcure.kolo:normalizers:1.0.0")
-    implementation("com.fatihcure.kolo:transformers:1.0.0")
-    implementation("com.fatihcure.kolo:providers:1.0.0")
+    implementation("com.fatihcure.kolo:core:1.1.0")
+    implementation("com.fatihcure.kolo:normalizers:1.1.0")
+    implementation("com.fatihcure.kolo:transformers:1.1.0")
+    implementation("com.fatihcure.kolo:providers:1.1.0")
 }
 ```
 
@@ -131,22 +131,22 @@ Add to your `pom.xml`:
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>core</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </dependency>
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>normalizers</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </dependency>
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>transformers</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </dependency>
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>providers</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </dependency>
 </dependencies>
 ```

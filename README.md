@@ -58,9 +58,9 @@ With this approach, the number of conversions drops from _N × (N-1)_ to just _2
 ```kotlin
 // Add dependencies
 dependencies {
-    implementation("com.fatihcure.kolo:providers:1.0.0")
-    implementation("com.fatihcure.kolo:normalizers:1.0.0")
-    implementation("com.fatihcure.kolo:transformers:1.0.0")
+    implementation("com.fatihcure.kolo:providers:1.1.0")
+    implementation("com.fatihcure.kolo:normalizers:1.1.0")
+    implementation("com.fatihcure.kolo:transformers:1.1.0")
 }
 
 // Basic usage
