@@ -1,6 +1,9 @@
 package com.fatihcure.kolo.core
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 /**
@@ -36,6 +39,7 @@ class BidirectionalKolo<SourceType, TargetType>(
 
     /**
      * Converts a streaming response from target format to source format
+     * Uses concurrent processing to avoid waiting for all streaming payloads
      *
      * @param targetStream the streaming response from target format
      * @return the converted streaming response in source format
@@ -49,11 +53,15 @@ class BidirectionalKolo<SourceType, TargetType>(
             "Source streaming transformer is required for streaming conversion"
         }
 
-        // First normalize the target stream to intermittent format
-        val intermittentStream = targetNormalizer.normalizeStreamingResponse(targetStream)
+        return targetStream
+            .flowOn(Dispatchers.IO)
+            .buffer()
+            .let { stream ->
+                val intermittentStream = targetNormalizer.normalizeStreamingResponse(stream)
 
-        // Then transform the intermittent stream to source format
-        return sourceStreamingTransformer.transformStreamingResponse(intermittentStream)
+                sourceStreamingTransformer.transformStreamingResponse(intermittentStream)
+                    .flowOn(Dispatchers.Default)
+            }
     }
 
     /**
