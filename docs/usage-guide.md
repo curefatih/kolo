@@ -189,7 +189,7 @@ import kotlinx.coroutines.runBlocking
 
 fun streamingExample() = runBlocking {
     val provider = KoloProvider()
-    val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, AnthropicRequest>()
+    val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, AnthropicRequest, AnthropicResponse>()
 
     // Simulate a streaming response from Anthropic
     val anthropicStream: Flow<AnthropicStreamEvent> = flowOf(
