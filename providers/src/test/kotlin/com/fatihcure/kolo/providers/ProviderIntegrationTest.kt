@@ -2,8 +2,10 @@ package com.fatihcure.kolo.providers
 
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicMessage
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
+import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse
 import com.fatihcure.kolo.normalizers.openai.OpenAIMessage
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
+import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -90,7 +92,12 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo(OpenAIRequest::class, AnthropicRequest::class)
+        val bidirectionalKolo = koloProvider.createBidirectionalKolo(
+            OpenAIRequest::class,
+            OpenAIResponse::class,
+            AnthropicRequest::class,
+            AnthropicResponse::class,
+        )
         val anthropicRequest = bidirectionalKolo.convertRequest(openAIRequest)
 
         // Then

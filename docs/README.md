@@ -20,9 +20,9 @@ Complete guide on how to use the Kolo library, including:
 1. **Add Dependencies**
    ```kotlin
    dependencies {
-       implementation("com.fatihcure.kolo:providers:1.1.0")
-       implementation("com.fatihcure.kolo:normalizers:1.1.0")
-       implementation("com.fatihcure.kolo:transformers:1.1.0")
+       implementation("com.fatihcure.kolo:providers:1.3.0")
+       implementation("com.fatihcure.kolo:normalizers:1.3.0")
+       implementation("com.fatihcure.kolo:transformers:1.3.0")
    }
    ```
 

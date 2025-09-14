@@ -3,6 +3,7 @@ package com.fatihcure.kolo.core
 import kotlinx.coroutines.flow.Flow
 
 /**
+ * TODO: create combined normalizer instead
  * Interface for normalizing provider-specific requests and responses
  * into the intermittent format
  */
