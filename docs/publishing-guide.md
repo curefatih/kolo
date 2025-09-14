@@ -5,10 +5,10 @@ This guide explains how to publish the Kolo library to GitHub Packages.
 ## Overview
 
 The project is configured to publish all modules to GitHub Packages:
-- `com.fatihcure.kolo:core:1.1.0`
-- `com.fatihcure.kolo:normalizers:1.1.0`
-- `com.fatihcure.kolo:transformers:1.1.0`
-- `com.fatihcure.kolo:providers:1.1.0`
+- `com.fatihcure.kolo:core:1.2.0`
+- `com.fatihcure.kolo:normalizers:1.2.0`
+- `com.fatihcure.kolo:transformers:1.2.0`
+- `com.fatihcure.kolo:providers:1.2.0`
 
 ## Prerequisites
 
@@ -63,7 +63,7 @@ The project includes a GitHub Actions workflow that automatically publishes when
    ```kotlin
    allprojects {
        group = "com.fatihcure.kolo"
-       version = "1.1.0"  // Update version
+       version = "1.2.0"  // Update version
        // ...
    }
    ```
@@ -71,14 +71,14 @@ The project includes a GitHub Actions workflow that automatically publishes when
 2. **Commit and push changes**:
    ```bash
    git add .
-   git commit -m "feat: release version 1.1.0"
+   git commit -m "feat: release version 1.2.0"
    git push origin main
    ```
 
 3. **Create and push a tag**:
    ```bash
-   git tag v1.1.0
-   git push origin v1.1.0
+   git tag v1.2.0
+   git push origin v1.2.0
    ```
 
 4. **The GitHub Action will automatically**:
@@ -107,10 +107,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.fatihcure.kolo:core:1.1.0")
-    implementation("com.fatihcure.kolo:normalizers:1.1.0")
-    implementation("com.fatihcure.kolo:transformers:1.1.0")
-    implementation("com.fatihcure.kolo:providers:1.1.0")
+    implementation("com.fatihcure.kolo:core:1.2.0")
+    implementation("com.fatihcure.kolo:normalizers:1.2.0")
+    implementation("com.fatihcure.kolo:transformers:1.2.0")
+    implementation("com.fatihcure.kolo:providers:1.2.0")
 }
 ```
 
@@ -131,22 +131,22 @@ Add to your `pom.xml`:
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>core</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </dependency>
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>normalizers</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </dependency>
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>transformers</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </dependency>
     <dependency>
         <groupId>com.fatihcure.kolo</groupId>
         <artifactId>providers</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </dependency>
 </dependencies>
 ```
