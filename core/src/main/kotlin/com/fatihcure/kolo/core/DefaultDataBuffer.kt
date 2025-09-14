@@ -119,18 +119,16 @@ class DefaultDataBuffer(
     /**
      * Process a complete chunk to extract the actual data
      * Handles SSE format: "data: {json}\n\n"
+     * According to SSE specification, multiple data: lines should be concatenated with newlines
      */
     private fun processChunk(chunk: String): String? {
-        val lines = chunk.trim().split("\n")
-        for (line in lines) {
-            if (line.startsWith("data: ")) {
-                val data = line.substring(6)
-                if (data.trim() == "[DONE]") {
-                    return null
-                }
-                return data
-            }
+        val data = chunk.lines()
+            .filter { it.startsWith("data: ") }
+            .joinToString(separator = "\n") { it.substring(6) }
+
+        if (data.trim() == "[DONE]" || data.isBlank()) {
+            return null
         }
-        return null
+        return data
     }
 }

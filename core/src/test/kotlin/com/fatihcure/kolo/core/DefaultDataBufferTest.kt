@@ -409,4 +409,45 @@ data: {"content": "World"}
         val remaining = buffer.getRemainingData()
         assertThat(remaining).isEqualTo("{\"content\": \"Partial\"}") // Clean JSON without trailing \n
     }
+
+    @Test
+    fun `should handle multi-line SSE data correctly`() {
+        // Test that multiple data: lines are properly concatenated according to SSE specification
+        val multiLineData = """data: {"content": "First line"}
+data: {"content": "Second line"}
+data: {"content": "Third line"}
+
+"""
+        val result = buffer.addChunk(multiLineData)
+
+        assertThat(result).hasSize(1)
+        // All data lines should be concatenated with newlines
+        assertThat(result[0]).isEqualTo(
+            """{"content": "First line"}
+{"content": "Second line"}
+{"content": "Third line"}""",
+        )
+    }
+
+    @Test
+    fun `should handle mixed single and multi-line SSE data`() {
+        // Test handling of both single-line and multi-line SSE events
+        val mixedData = """data: {"single": "event"}
+
+data: {"multi": "line1"}
+data: {"multi": "line2"}
+
+data: {"another": "single"}
+
+"""
+        val result = buffer.addChunk(mixedData)
+
+        assertThat(result).hasSize(3)
+        assertThat(result[0]).isEqualTo("""{"single": "event"}""")
+        assertThat(result[1]).isEqualTo(
+            """{"multi": "line1"}
+{"multi": "line2"}""",
+        )
+        assertThat(result[2]).isEqualTo("""{"another": "single"}""")
+    }
 }
