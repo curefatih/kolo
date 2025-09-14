@@ -27,8 +27,7 @@ class KoloProvider {
      * Register all available providers with the global registry
      */
     private fun registerProviders() {
-        // Register OpenAI provider
-        val openAIProvider = OpenAIProvider()
+        val openAIProvider = OpenAIProvider(config = OpenAIProviderConfig.default())
         GlobalProviderAutoRegistration.registerProvider(
             OpenAIRequest::class,
             OpenAIResponse::class,

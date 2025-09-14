@@ -17,7 +17,7 @@ class ProviderIntegrationTest {
     @BeforeEach
     fun setUp() {
         koloProvider = KoloProvider()
-        openAIProvider = OpenAIProvider()
+        openAIProvider = OpenAIProvider(config = OpenAIProviderConfig.default())
         anthropicProvider = AnthropicProvider()
     }
 

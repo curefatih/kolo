@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.normalizers.openai
 
+import com.fatihcure.kolo.core.IntermittentStreamEvent
 import com.fatihcure.kolo.core.MessageRole
 import com.fatihcure.kolo.normalizers.TestUtils
 import kotlinx.coroutines.flow.flowOf
@@ -198,31 +199,31 @@ class OpenAINormalizerTest {
     }
 
     @Test
-    fun `normalizeStreamingResponse should convert OpenAIStreamEvent to IntermittentStreamEvent`() {
+    fun `normalizeStreamingResponse should convert OpenAIStreamingResponse to IntermittentStreamEvent`() {
         TestUtils.runTest<Unit> {
             // Given
             val streamEvents = flowOf(
-                OpenAIStreamEvent(
+                OpenAIStreamingResponse(
                     id = "chatcmpl-123",
                     model = "gpt-4",
                     choices = listOf(
-                        OpenAIChoice(
+                        OpenAIStreamingChoice(
                             index = 0,
-                            message = OpenAIMessage(role = "assistant", content = "Hello"),
+                            delta = OpenAIStreamingDelta(role = "assistant", content = "Hello"),
                         ),
                     ),
                 ),
-                OpenAIStreamEvent(
+                OpenAIStreamingResponse(
                     choices = listOf(
-                        OpenAIChoice(
+                        OpenAIStreamingChoice(
                             index = 0,
-                            delta = OpenAIDelta(content = " there!"),
+                            delta = OpenAIStreamingDelta(content = " there!"),
                         ),
                     ),
                 ),
-                OpenAIStreamEvent(
+                OpenAIStreamingResponse(
                     choices = listOf(
-                        OpenAIChoice(
+                        OpenAIStreamingChoice(
                             index = 0,
                             finishReason = "stop",
                         ),
@@ -257,7 +258,7 @@ class OpenAINormalizerTest {
         {
             // Given
             val streamEvents = flowOf(
-                OpenAIStreamEvent(
+                OpenAIStreamingResponse(
                     error = OpenAIError(
                         type = "invalid_request_error",
                         message = "Invalid request",
@@ -283,9 +284,9 @@ class OpenAINormalizerTest {
     fun `normalizeStreamingResponse should throw exception for unknown event type`() = TestUtils.runTest<Unit> {
         // Given
         val streamEvents = flowOf(
-            OpenAIStreamEvent(
+            OpenAIStreamingResponse(
                 choices = listOf(
-                    OpenAIChoice(index = 0), // No message, delta, or finishReason
+                    OpenAIStreamingChoice(index = 0), // No message, delta, or finishReason
                 ),
             ),
         )
@@ -296,7 +297,36 @@ class OpenAINormalizerTest {
                 TestUtils.collectAll(normalizer.normalizeStreamingResponse(streamEvents))
             }
         }.isInstanceOf(IllegalArgumentException::class.java)
-            .hasMessageContaining("Unknown OpenAI stream event type")
+            .hasMessageContaining("Unknown OpenAI streaming choice type in response")
+    }
+
+    @Test
+    fun `normalizeStreamingResponse should handle usage-only chunks`() = TestUtils.runTest<Unit> {
+        // Given
+        val streamEvents = flowOf(
+            OpenAIStreamingResponse(
+                choices = emptyList(), // Empty choices array
+                usage = OpenAIUsage(
+                    promptTokens = 10,
+                    completionTokens = 5,
+                    totalTokens = 15,
+                ),
+            ),
+        )
+
+        // When
+        val result = TestUtils.collectAll(normalizer.normalizeStreamingResponse(streamEvents))
+
+        // Then
+        assertThat(result).hasSize(1)
+        val event = result.first()
+        assertThat(event).isInstanceOf(IntermittentStreamEvent.MessageEnd::class.java)
+        val messageEnd = event as IntermittentStreamEvent.MessageEnd
+        assertThat(messageEnd.finishReason).isEqualTo("stop")
+        assertThat(messageEnd.usage).isNotNull
+        assertThat(messageEnd.usage!!.promptTokens).isEqualTo(10)
+        assertThat(messageEnd.usage!!.completionTokens).isEqualTo(5)
+        assertThat(messageEnd.usage!!.totalTokens).isEqualTo(15)
     }
 
     @Test
