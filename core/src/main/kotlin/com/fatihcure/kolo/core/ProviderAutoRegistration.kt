@@ -19,6 +19,13 @@ annotation class AutoRegisterNormalizer(val type: KClass<*>)
 annotation class AutoRegisterTransformer(val type: KClass<*>)
 
 /**
+ * Annotation to mark streaming transformers for auto-registration
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class AutoRegisterStreamingTransformer(val type: KClass<*>)
+
+/**
  * Annotation to mark providers for auto-registration
  */
 @Target(AnnotationTarget.CLASS)
@@ -95,6 +102,28 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
     }
 
     /**
+     * Register a streaming transformer with explicit type
+     */
+    fun <StreamEventType : Any> registerStreamingTransformer(
+        type: KClass<*>,
+        transformer: StreamingTransformer<StreamEventType>,
+    ) {
+        registry.registerStreamingTransformer(type, transformer)
+    }
+
+    /**
+     * Register multiple streaming transformers at once
+     * Note: This requires explicit type specification for each streaming transformer
+     */
+    fun <StreamEventType : Any> registerStreamingTransformers(
+        vararg transformers: Pair<KClass<*>, StreamingTransformer<StreamEventType>>,
+    ) {
+        transformers.forEach { (type, transformer) ->
+            registry.registerStreamingTransformer(type, transformer)
+        }
+    }
+
+    /**
      * Register a provider that implements both normalizer and transformer functionality
      */
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
@@ -129,9 +158,9 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
             override fun transformError(error: IntermittentError): ResponseType = throw UnsupportedOperationException("Response type cannot be used for errors - use ErrorType")
         }
 
-        registry.registerNormalizer(requestType, requestNormalizer)
+        registry.registerNormalizer(requestType, requestNormalizer as Normalizer<RequestType>)
         registry.registerTransformer(requestType, requestTransformer)
-        registry.registerNormalizer(responseType, responseNormalizer)
+        registry.registerNormalizer(responseType, responseNormalizer as Normalizer<ResponseType>)
         registry.registerTransformer(responseType, responseTransformer)
     }
 
@@ -186,6 +215,19 @@ object GlobalProviderAutoRegistration {
         vararg transformers: Pair<KClass<*>, Transformer<RequestType, ResponseType, ErrorType>>,
     ) {
         autoRegistration.registerTransformers(*transformers)
+    }
+
+    fun <StreamEventType : Any> registerStreamingTransformer(
+        type: KClass<*>,
+        transformer: StreamingTransformer<StreamEventType>,
+    ) {
+        autoRegistration.registerStreamingTransformer(type, transformer)
+    }
+
+    fun <StreamEventType : Any> registerStreamingTransformers(
+        vararg transformers: Pair<KClass<*>, StreamingTransformer<StreamEventType>>,
+    ) {
+        autoRegistration.registerStreamingTransformers(*transformers)
     }
 
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(

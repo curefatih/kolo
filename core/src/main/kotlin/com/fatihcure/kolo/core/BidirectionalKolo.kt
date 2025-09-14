@@ -7,15 +7,24 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 /**
- * Bidirectional Kolo class that can convert in both directions
+ * Bidirectional Kolo class that can convert between two different LLM providers
+ *
+ * This class handles the complete bidirectional conversion flow:
+ * - Forward: SourceRequest → TargetRequest (via source normalizer + target transformer)
+ * - Backward: TargetResponse → SourceResponse (via target normalizer + source transformer)
+ *
+ * @param SourceRequestType The source provider's request type (e.g., OpenAIRequest)
+ * @param SourceResponseType The source provider's response type (e.g., OpenAIResponse)
+ * @param TargetRequestType The target provider's request type (e.g., AnthropicRequest)
+ * @param TargetResponseType The target provider's response type (e.g., AnthropicResponse)
  */
-class BidirectionalKolo<SourceType, TargetType>(
-    private val sourceNormalizer: Normalizer<SourceType>,
-    private val targetNormalizer: Normalizer<TargetType>,
-    private val sourceTransformer: Transformer<SourceType, SourceType, SourceType>,
-    private val targetTransformer: Transformer<TargetType, TargetType, TargetType>,
-    private val sourceStreamingTransformer: StreamingTransformer<SourceType>? = null,
-    private val targetStreamingTransformer: StreamingTransformer<TargetType>? = null,
+class BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType>(
+    private val sourceNormalizer: Normalizer<SourceRequestType>,
+    private val sourceTransformer: Transformer<SourceRequestType, SourceResponseType, SourceResponseType>,
+    private val targetNormalizer: Normalizer<TargetResponseType>,
+    private val targetTransformer: Transformer<TargetRequestType, TargetResponseType, TargetResponseType>,
+    private val sourceStreamingTransformer: StreamingTransformer<SourceResponseType>? = null,
+    private val targetStreamingTransformer: StreamingTransformer<TargetResponseType>? = null,
 ) {
     companion object {
         val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
@@ -23,16 +32,22 @@ class BidirectionalKolo<SourceType, TargetType>(
 
     /**
      * Converts a request from source format to target format
+     *
+     * @param sourceRequest The request in source format
+     * @return The request converted to target format
      */
-    fun convertRequest(sourceRequest: SourceType): TargetType {
+    fun convertRequest(sourceRequest: SourceRequestType): TargetRequestType {
         val intermittentRequest = sourceNormalizer.normalizeRequest(sourceRequest)
         return targetTransformer.transformRequest(intermittentRequest)
     }
 
     /**
      * Converts a response from target format to source format
+     *
+     * @param targetResponse The response in target format
+     * @return The response converted to source format
      */
-    fun convertResponse(targetResponse: TargetType): SourceType {
+    fun convertResponse(targetResponse: TargetResponseType): SourceResponseType {
         val intermittentResponse = targetNormalizer.normalizeResponse(targetResponse)
         return sourceTransformer.transformResponse(intermittentResponse)
     }
@@ -45,7 +60,7 @@ class BidirectionalKolo<SourceType, TargetType>(
      * @return the converted streaming response in source format
      * @throws UnsupportedOperationException if streaming transformers are not available
      */
-    fun convertStreamingResponse(targetStream: Flow<TargetType>): Flow<SourceType> {
+    fun convertStreamingResponse(targetStream: Flow<TargetResponseType>): Flow<SourceResponseType> {
         requireNotNull(targetStreamingTransformer) {
             "Target streaming transformer is required for streaming conversion"
         }
@@ -66,8 +81,11 @@ class BidirectionalKolo<SourceType, TargetType>(
 
     /**
      * Converts an error from target format to source format
+     *
+     * @param targetError The error in target format
+     * @return The error converted to source format
      */
-    fun convertError(targetError: TargetType): SourceType {
+    fun convertError(targetError: TargetResponseType): SourceResponseType {
         val intermittentError = targetNormalizer.normalizeError(targetError)
         return sourceTransformer.transformError(intermittentError)
     }
@@ -75,37 +93,37 @@ class BidirectionalKolo<SourceType, TargetType>(
     /**
      * Converts a request from JSON string to target format
      */
-    inline fun <reified T> convertRequestFromJson(json: String): TargetType {
+    inline fun <reified T> convertRequestFromJson(json: String): TargetRequestType {
         val sourceRequest = objectMapper.readValue(json, T::class.java)
-        return convertRequest(sourceRequest as SourceType)
+        return convertRequest(sourceRequest as SourceRequestType)
     }
 
     /**
      * Converts a request from source format to JSON string
      */
-    fun convertRequestToJson(sourceRequest: SourceType): String {
+    fun convertRequestToJson(sourceRequest: SourceRequestType): String {
         return objectMapper.writeValueAsString(sourceRequest)
     }
 
     /**
      * Converts a response from target format to JSON string
      */
-    fun convertResponseToJson(targetResponse: TargetType): String {
+    fun convertResponseToJson(targetResponse: TargetResponseType): String {
         return objectMapper.writeValueAsString(targetResponse)
     }
 
     /**
      * Converts a response from JSON string to source format
      */
-    inline fun <reified T> convertResponseFromJson(json: String): SourceType {
+    inline fun <reified T> convertResponseFromJson(json: String): SourceResponseType {
         val targetResponse = objectMapper.readValue(json, T::class.java)
-        return convertResponse(targetResponse as TargetType)
+        return convertResponse(targetResponse as TargetResponseType)
     }
 
     /**
      * Converts a streaming response from target format to JSON string
      */
-    fun convertStreamingResponseToJson(targetStream: Flow<TargetType>): Flow<String> {
+    fun convertStreamingResponseToJson(targetStream: Flow<TargetResponseType>): Flow<String> {
         return targetStream.map { response ->
             objectMapper.writeValueAsString(response)
         }
@@ -114,15 +132,15 @@ class BidirectionalKolo<SourceType, TargetType>(
     /**
      * Converts an error from target format to JSON string
      */
-    fun convertErrorToJson(targetError: TargetType): String {
+    fun convertErrorToJson(targetError: TargetResponseType): String {
         return objectMapper.writeValueAsString(targetError)
     }
 
     /**
      * Converts an error from JSON string to source format
      */
-    inline fun <reified T> convertErrorFromJson(json: String): SourceType {
+    inline fun <reified T> convertErrorFromJson(json: String): SourceResponseType {
         val targetError = objectMapper.readValue(json, T::class.java)
-        return convertError(targetError as TargetType)
+        return convertError(targetError as TargetResponseType)
     }
 }

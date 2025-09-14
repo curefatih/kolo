@@ -56,11 +56,13 @@ class KoloProvider {
     /**
      * Creates a bidirectional Kolo instance using generic types
      */
-    fun <SourceType : Any, TargetType : Any> createBidirectionalKolo(
-        sourceType: KClass<SourceType>,
-        targetType: KClass<TargetType>,
-    ): BidirectionalKolo<SourceType, TargetType> {
-        return factory.createBidirectionalKolo(sourceType, targetType)
+    fun <SourceRequestType : Any, SourceResponseType : Any, TargetRequestType : Any, TargetResponseType : Any> createBidirectionalKolo(
+        sourceRequestType: KClass<SourceRequestType>,
+        sourceResponseType: KClass<SourceResponseType>,
+        targetRequestType: KClass<TargetRequestType>,
+        targetResponseType: KClass<TargetResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        return factory.createBidirectionalKoloV2(sourceRequestType, sourceResponseType, targetRequestType, targetResponseType)
     }
 
     /**
@@ -73,8 +75,8 @@ class KoloProvider {
     /**
      * Creates a bidirectional Kolo instance using reified types
      */
-    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, TargetType> {
-        return factory.createBidirectionalKolo<SourceType, TargetType>()
+    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        return factory.createBidirectionalKoloV2<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType>()
     }
 
     /**

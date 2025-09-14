@@ -27,31 +27,46 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
 
     /**
      * Create a bidirectional Kolo instance for converting between source and target
+     * @deprecated This method is deprecated due to breaking changes in BidirectionalKolo signature.
+     * Use createBidirectionalKoloV2 instead.
      */
+    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2(sourceType, targetType, sourceType, targetType)"))
     fun <SourceType : Any, TargetType : Any> createBidirectionalKolo(
         sourceType: KClass<SourceType>,
         targetType: KClass<TargetType>,
-    ): BidirectionalKolo<SourceType, TargetType> {
-        val sourceNormalizer = registry.getNormalizer(sourceType)
-            ?: throw IllegalArgumentException("No normalizer found for source type: ${sourceType.simpleName}")
+    ): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
+        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
+    }
 
-        val targetNormalizer = registry.getNormalizer(targetType)
-            ?: throw IllegalArgumentException("No normalizer found for target type: ${targetType.simpleName}")
+    /**
+     * Create a bidirectional Kolo instance for converting between different request and response types
+     */
+    fun <SourceRequestType : Any, SourceResponseType : Any, TargetRequestType : Any, TargetResponseType : Any> createBidirectionalKoloV2(
+        sourceRequestType: KClass<SourceRequestType>,
+        sourceResponseType: KClass<SourceResponseType>,
+        targetRequestType: KClass<TargetRequestType>,
+        targetResponseType: KClass<TargetResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        val sourceNormalizer = registry.getNormalizer(sourceRequestType)
+            ?: throw IllegalArgumentException("No normalizer found for source request type: ${sourceRequestType.simpleName}")
 
-        val sourceTransformer = registry.getTransformer<SourceType, SourceType, SourceType>(sourceType)
-            ?: throw IllegalArgumentException("No transformer found for source type: ${sourceType.simpleName}")
+        val sourceTransformer = registry.getTransformer<SourceRequestType, SourceResponseType, SourceResponseType>(sourceResponseType)
+            ?: throw IllegalArgumentException("No transformer found for source response type: ${sourceResponseType.simpleName}")
 
-        val targetTransformer = registry.getTransformer<TargetType, TargetType, TargetType>(targetType)
-            ?: throw IllegalArgumentException("No transformer found for target type: ${targetType.simpleName}")
+        val targetNormalizer = registry.getNormalizer(targetResponseType)
+            ?: throw IllegalArgumentException("No normalizer found for target response type: ${targetResponseType.simpleName}")
+
+        val targetTransformer = registry.getTransformer<TargetRequestType, TargetResponseType, TargetResponseType>(targetRequestType)
+            ?: throw IllegalArgumentException("No transformer found for target request type: ${targetRequestType.simpleName}")
 
         // Try to get streaming transformers if available
-        val sourceStreamingTransformer = registry.getStreamingTransformer<SourceType>(sourceType)
-        val targetStreamingTransformer = registry.getStreamingTransformer<TargetType>(targetType)
+        val sourceStreamingTransformer = registry.getStreamingTransformer<SourceResponseType>(sourceResponseType)
+        val targetStreamingTransformer = registry.getStreamingTransformer<TargetResponseType>(targetResponseType)
 
         return BidirectionalKolo(
             sourceNormalizer,
-            targetNormalizer,
             sourceTransformer,
+            targetNormalizer,
             targetTransformer,
             sourceStreamingTransformer,
             targetStreamingTransformer,
@@ -67,9 +82,19 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
 
     /**
      * Create a bidirectional Kolo instance using reified types
+     * @deprecated This method is deprecated due to breaking changes in BidirectionalKolo signature.
+     * Use createBidirectionalKoloV2 instead.
      */
-    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, TargetType> {
-        return createBidirectionalKolo(SourceType::class, TargetType::class)
+    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2<SourceType, SourceType, TargetType, TargetType>()"))
+    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
+        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
+    }
+
+    /**
+     * Create a bidirectional Kolo instance using reified types
+     */
+    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any> createBidirectionalKoloV2(): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        return createBidirectionalKoloV2(SourceRequestType::class, SourceResponseType::class, TargetRequestType::class, TargetResponseType::class)
     }
 
     /**
@@ -146,19 +171,34 @@ object GlobalProviderFactory {
         return factory.createKolo(sourceType, targetType)
     }
 
+    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2(sourceType, targetType, sourceType, targetType)"))
     fun <SourceType : Any, TargetType : Any> createBidirectionalKolo(
         sourceType: KClass<SourceType>,
         targetType: KClass<TargetType>,
-    ): BidirectionalKolo<SourceType, TargetType> {
-        return factory.createBidirectionalKolo(sourceType, targetType)
+    ): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
+        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
+    }
+
+    fun <SourceRequestType : Any, SourceResponseType : Any, TargetRequestType : Any, TargetResponseType : Any> createBidirectionalKoloV2(
+        sourceRequestType: KClass<SourceRequestType>,
+        sourceResponseType: KClass<SourceResponseType>,
+        targetRequestType: KClass<TargetRequestType>,
+        targetResponseType: KClass<TargetResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        return factory.createBidirectionalKoloV2(sourceRequestType, sourceResponseType, targetRequestType, targetResponseType)
     }
 
     inline fun <reified SourceType : Any, reified TargetType : Any> createKolo(): Kolo<SourceType, TargetType> {
         return factory.createKolo<SourceType, TargetType>()
     }
 
-    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, TargetType> {
-        return factory.createBidirectionalKolo<SourceType, TargetType>()
+    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2<SourceType, SourceType, TargetType, TargetType>()"))
+    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
+        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
+    }
+
+    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any> createBidirectionalKoloV2(): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        return factory.createBidirectionalKoloV2<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType>()
     }
 
     fun <SourceType : Any, TargetType : Any> canConvert(

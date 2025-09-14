@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.transformers.anthropic
 
+import com.fatihcure.kolo.core.AutoRegisterStreamingTransformer
 import com.fatihcure.kolo.core.CombinedTransformer
 import com.fatihcure.kolo.core.IntermittentError
 import com.fatihcure.kolo.core.IntermittentMessage
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Transformer implementation for Anthropic Claude API
  */
+@AutoRegisterStreamingTransformer(AnthropicStreamEvent::class)
 class AnthropicTransformer : CombinedTransformer<AnthropicRequest, AnthropicResponse, AnthropicError, AnthropicStreamEvent> {
 
     override fun transformRequest(request: IntermittentRequest): AnthropicRequest {

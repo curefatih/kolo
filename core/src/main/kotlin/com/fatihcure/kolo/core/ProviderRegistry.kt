@@ -163,6 +163,13 @@ object GlobalProviderRegistry {
         registry.registerTransformer(type, transformer)
     }
 
+    fun <StreamEventType : Any> registerStreamingTransformer(
+        type: KClass<*>,
+        transformer: StreamingTransformer<StreamEventType>,
+    ) {
+        registry.registerStreamingTransformer(type, transformer)
+    }
+
     fun <T : Any> getNormalizer(type: KClass<T>): Normalizer<T>? {
         return registry.getNormalizer(type)
     }
@@ -173,6 +180,12 @@ object GlobalProviderRegistry {
         return registry.getTransformer(type)
     }
 
+    fun <StreamEventType : Any> getStreamingTransformer(
+        type: KClass<*>,
+    ): StreamingTransformer<StreamEventType>? {
+        return registry.getStreamingTransformer(type)
+    }
+
     fun hasNormalizer(type: KClass<*>): Boolean {
         return registry.hasNormalizer(type)
     }
@@ -181,11 +194,19 @@ object GlobalProviderRegistry {
         return registry.hasTransformer(type)
     }
 
+    fun hasStreamingTransformer(type: KClass<*>): Boolean {
+        return registry.hasStreamingTransformer(type)
+    }
+
     fun getNormalizerTypes(): Set<KClass<*>> {
         return registry.getNormalizerTypes()
     }
 
     fun getTransformerTypes(): Set<KClass<*>> {
         return registry.getTransformerTypes()
+    }
+
+    fun getStreamingTransformerTypes(): Set<KClass<*>> {
+        return registry.getStreamingTransformerTypes()
     }
 }

@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.transformers.openai
 
+import com.fatihcure.kolo.core.AutoRegisterStreamingTransformer
 import com.fatihcure.kolo.core.CombinedTransformer
 import com.fatihcure.kolo.core.IntermittentChoice
 import com.fatihcure.kolo.core.IntermittentDelta
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Transformer implementation for OpenAI API
  */
+@AutoRegisterStreamingTransformer(OpenAIStreamingResponse::class)
 class OpenAITransformer : CombinedTransformer<OpenAIRequest, OpenAIResponse, OpenAIError, OpenAIStreamingResponse> {
 
     override fun transformRequest(request: IntermittentRequest): OpenAIRequest {

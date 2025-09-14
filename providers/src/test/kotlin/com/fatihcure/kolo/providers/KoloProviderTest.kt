@@ -3,7 +3,9 @@ package com.fatihcure.kolo.providers
 import com.fatihcure.kolo.core.BidirectionalKolo
 import com.fatihcure.kolo.core.Kolo
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
+import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
+import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,7 +42,12 @@ class KoloProviderTest {
     @Test
     fun `should create bidirectional Kolo instance`() {
         // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo(OpenAIRequest::class, AnthropicRequest::class)
+        val bidirectionalKolo = koloProvider.createBidirectionalKolo(
+            OpenAIRequest::class,
+            OpenAIResponse::class,
+            AnthropicRequest::class,
+            AnthropicResponse::class,
+        )
 
         // Then
         assertThat(bidirectionalKolo).isNotNull
@@ -60,7 +67,7 @@ class KoloProviderTest {
     @Test
     fun `should create bidirectional Kolo instance using reified types`() {
         // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo<OpenAIRequest, AnthropicRequest>()
+        val bidirectionalKolo = koloProvider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, AnthropicRequest, AnthropicResponse>()
 
         // Then
         assertThat(bidirectionalKolo).isNotNull
