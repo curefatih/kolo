@@ -261,7 +261,7 @@ fun jsonStreamingExample() = runBlocking {
     val bidirectionalKolo = /* your bidirectional kolo instance */
     
     // Convert streaming response to JSON
-    val targetStream: Flow<TargetType> = flowOf(/* your stream events */)
+    val targetStream: Flow<TargetResponseType> = flowOf(/* your stream events */)
     val jsonStream: Flow<String> = bidirectionalKolo.convertStreamingResponseToJson(targetStream)
     
     jsonStream.collect { json ->
