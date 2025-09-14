@@ -5,14 +5,14 @@ package com.fatihcure.kolo.core
  */
 class KoloBuilder<SourceType, TargetType> {
     private var sourceNormalizer: Normalizer<SourceType>? = null
-    private var targetTransformer: Transformer<TargetType>? = null
+    private var targetTransformer: Transformer<TargetType, TargetType, TargetType>? = null
 
     fun withSourceNormalizer(normalizer: Normalizer<SourceType>): KoloBuilder<SourceType, TargetType> {
         this.sourceNormalizer = normalizer
         return this
     }
 
-    fun withTargetTransformer(transformer: Transformer<TargetType>): KoloBuilder<SourceType, TargetType> {
+    fun withTargetTransformer(transformer: Transformer<TargetType, TargetType, TargetType>): KoloBuilder<SourceType, TargetType> {
         this.targetTransformer = transformer
         return this
     }
@@ -30,7 +30,7 @@ class KoloBuilder<SourceType, TargetType> {
  */
 fun <SourceType, TargetType> kolo(
     sourceNormalizer: Normalizer<SourceType>,
-    targetTransformer: Transformer<TargetType>,
+    targetTransformer: Transformer<TargetType, TargetType, TargetType>,
 ): Kolo<SourceType, TargetType> {
     return Kolo(sourceNormalizer, targetTransformer)
 }

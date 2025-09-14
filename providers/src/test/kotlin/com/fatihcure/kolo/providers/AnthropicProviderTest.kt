@@ -8,6 +8,7 @@ import com.fatihcure.kolo.normalizers.anthropic.AnthropicContent
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicMessage
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse
+import com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicUsage
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -147,15 +148,16 @@ class AnthropicProviderTest {
     @Test
     fun `should throw exception when normalizing streaming response`() {
         // Given
-        val anthropicResponse = AnthropicResponse(
+        val anthropicStreamEvent = AnthropicStreamEvent(
+            type = "message",
             id = "test-id",
             model = "claude-3-sonnet-20240229",
             content = emptyList(),
         )
-        val stream = flowOf(anthropicResponse)
+        val stream = flowOf(anthropicStreamEvent)
 
         // When & Then
-        assertThrows<UnsupportedOperationException> {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 anthropicProvider.normalizeStreamingResponse(stream).first()
             }
@@ -173,32 +175,32 @@ class AnthropicProviderTest {
 
         // Then
         assertThat(result).isNotNull
-        assertThat(result.id).isEmpty()
-        assertThat(result.model).isEmpty()
-        assertThat(result.content).isEmpty()
+        assertThat(result.id).isEqualTo("test-id")
+        assertThat(result.model).isEqualTo("claude-3-sonnet-20240229")
+        assertThat(result.type).isEqualTo("message_start")
+        assertThat(result.content).isNull()
         assertThat(result.usage).isNull()
     }
 
     @Test
-    fun `should normalize error from Anthropic response`() {
+    fun `should normalize error from Anthropic error`() {
         // Given
-        val anthropicResponse = AnthropicResponse(
-            id = "error-id",
-            model = "claude-3-sonnet-20240229",
-            content = emptyList(),
+        val anthropicError = com.fatihcure.kolo.normalizers.anthropic.AnthropicError(
+            type = "invalid_request_error",
+            message = "Invalid request parameters",
         )
 
         // When
-        val intermittentError = anthropicProvider.normalizeError(anthropicResponse)
+        val intermittentError = anthropicProvider.normalizeError(anthropicError)
 
         // Then
         assertThat(intermittentError).isNotNull
-        assertThat(intermittentError.type).isEqualTo("response_error")
-        assertThat(intermittentError.message).isEqualTo("Error in response processing")
+        assertThat(intermittentError.type).isEqualTo("invalid_request_error")
+        assertThat(intermittentError.message).isEqualTo("Invalid request parameters")
     }
 
     @Test
-    fun `should transform error to Anthropic response`() {
+    fun `should transform error to Anthropic error`() {
         // Given
         val intermittentError = IntermittentError(
             type = "test_error",
@@ -206,14 +208,12 @@ class AnthropicProviderTest {
         )
 
         // When
-        val anthropicResponse = anthropicProvider.transformError(intermittentError)
+        val anthropicError = anthropicProvider.transformError(intermittentError)
 
         // Then
-        assertThat(anthropicResponse).isNotNull
-        assertThat(anthropicResponse.id).isEmpty()
-        assertThat(anthropicResponse.model).isEmpty()
-        assertThat(anthropicResponse.content).isEmpty()
-        assertThat(anthropicResponse.usage).isNull()
+        assertThat(anthropicError).isNotNull
+        assertThat(anthropicError.type).isEqualTo("test_error")
+        assertThat(anthropicError.message).isEqualTo("Test error message")
     }
 
     @Test

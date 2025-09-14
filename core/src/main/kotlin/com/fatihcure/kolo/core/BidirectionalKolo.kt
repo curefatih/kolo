@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.map
 class BidirectionalKolo<SourceType, TargetType>(
     private val sourceNormalizer: Normalizer<SourceType>,
     private val targetNormalizer: Normalizer<TargetType>,
-    private val sourceTransformer: Transformer<SourceType>,
-    private val targetTransformer: Transformer<TargetType>,
+    private val sourceTransformer: Transformer<SourceType, SourceType, SourceType>,
+    private val targetTransformer: Transformer<TargetType, TargetType, TargetType>,
 ) {
     val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
 
@@ -32,10 +32,12 @@ class BidirectionalKolo<SourceType, TargetType>(
 
     /**
      * Converts a streaming response from target format to source format
+     * Note: This method requires streaming transformers to be available
      */
     fun convertStreamingResponse(targetStream: Flow<TargetType>): Flow<SourceType> {
-        val intermittentStream = targetNormalizer.normalizeStreamingResponse(targetStream)
-        return sourceTransformer.transformStreamingResponse(intermittentStream)
+        // This would need to be implemented with streaming transformers
+        // For now, we'll throw an exception to indicate this needs proper implementation
+        throw UnsupportedOperationException("Streaming conversion requires separate streaming transformers")
     }
 
     /**

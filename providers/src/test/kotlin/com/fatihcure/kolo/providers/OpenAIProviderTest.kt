@@ -146,12 +146,12 @@ class OpenAIProviderTest {
     @Test
     fun `should normalize streaming response`() = runBlocking {
         // Given
-        val openAIResponse = OpenAIResponse(
+        val openAIStreamingResponse = com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse(
             id = "test-id",
             model = "gpt-3.5-turbo",
             choices = emptyList(),
         )
-        val stream = flowOf(openAIResponse)
+        val stream = flowOf(openAIStreamingResponse)
 
         // When
         val result = openAIProvider.normalizeStreamingResponse(stream).first()
@@ -175,30 +175,30 @@ class OpenAIProviderTest {
         assertThat(result).isNotNull
         assertThat(result.id).isEqualTo("test-id")
         assertThat(result.model).isEqualTo("gpt-3.5-turbo")
-        assertThat(result.choices).isEmpty()
+        assertThat(result.choices).isNull()
         assertThat(result.usage).isNull()
     }
 
     @Test
-    fun `should normalize error from OpenAI response`() {
+    fun `should normalize error from OpenAI error`() {
         // Given
-        val openAIResponse = OpenAIResponse(
-            id = "error-id",
-            model = "gpt-3.5-turbo",
-            choices = emptyList(),
+        val openAIError = com.fatihcure.kolo.normalizers.openai.OpenAIError(
+            type = "invalid_request_error",
+            message = "Invalid request parameters",
+            code = "invalid_parameter",
         )
 
         // When
-        val intermittentError = openAIProvider.normalizeError(openAIResponse)
+        val intermittentError = openAIProvider.normalizeError(openAIError)
 
         // Then
         assertThat(intermittentError).isNotNull
-        assertThat(intermittentError.type).isEqualTo("response_error")
-        assertThat(intermittentError.message).isEqualTo("Error in response processing")
+        assertThat(intermittentError.type).isEqualTo("invalid_request_error")
+        assertThat(intermittentError.message).isEqualTo("Invalid request parameters")
     }
 
     @Test
-    fun `should transform error to OpenAI response`() {
+    fun `should transform error to OpenAI error`() {
         // Given
         val intermittentError = IntermittentError(
             type = "test_error",
@@ -206,14 +206,12 @@ class OpenAIProviderTest {
         )
 
         // When
-        val openAIResponse = openAIProvider.transformError(intermittentError)
+        val openAIError = openAIProvider.transformError(intermittentError)
 
         // Then
-        assertThat(openAIResponse).isNotNull
-        assertThat(openAIResponse.id).isEmpty()
-        assertThat(openAIResponse.model).isEmpty()
-        assertThat(openAIResponse.choices).isEmpty()
-        assertThat(openAIResponse.usage).isNull()
+        assertThat(openAIError).isNotNull
+        assertThat(openAIError.type).isEqualTo("test_error")
+        assertThat(openAIError.message).isEqualTo("Test error message")
     }
 
     @Test

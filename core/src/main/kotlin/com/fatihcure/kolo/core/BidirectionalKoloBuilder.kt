@@ -5,8 +5,8 @@ package com.fatihcure.kolo.core
 class BidirectionalKoloBuilder<SourceType, TargetType> {
     private var sourceNormalizer: Normalizer<SourceType>? = null
     private var targetNormalizer: Normalizer<TargetType>? = null
-    private var sourceTransformer: Transformer<SourceType>? = null
-    private var targetTransformer: Transformer<TargetType>? = null
+    private var sourceTransformer: Transformer<SourceType, SourceType, SourceType>? = null
+    private var targetTransformer: Transformer<TargetType, TargetType, TargetType>? = null
 
     fun withSourceNormalizer(normalizer: Normalizer<SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.sourceNormalizer = normalizer
@@ -18,12 +18,12 @@ class BidirectionalKoloBuilder<SourceType, TargetType> {
         return this
     }
 
-    fun withSourceTransformer(transformer: Transformer<SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
+    fun withSourceTransformer(transformer: Transformer<SourceType, SourceType, SourceType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.sourceTransformer = transformer
         return this
     }
 
-    fun withTargetTransformer(transformer: Transformer<TargetType>): BidirectionalKoloBuilder<SourceType, TargetType> {
+    fun withTargetTransformer(transformer: Transformer<TargetType, TargetType, TargetType>): BidirectionalKoloBuilder<SourceType, TargetType> {
         this.targetTransformer = transformer
         return this
     }
@@ -49,8 +49,8 @@ class BidirectionalKoloBuilder<SourceType, TargetType> {
 fun <SourceType, TargetType> bidirectionalKolo(
     sourceNormalizer: Normalizer<SourceType>,
     targetNormalizer: Normalizer<TargetType>,
-    sourceTransformer: Transformer<SourceType>,
-    targetTransformer: Transformer<TargetType>,
+    sourceTransformer: Transformer<SourceType, SourceType, SourceType>,
+    targetTransformer: Transformer<TargetType, TargetType, TargetType>,
 ): BidirectionalKolo<SourceType, TargetType> {
     return BidirectionalKolo(sourceNormalizer, targetNormalizer, sourceTransformer, targetTransformer)
 }

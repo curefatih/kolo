@@ -29,7 +29,7 @@ annotation class AutoRegisterProvider(val requestType: KClass<*>, val responseTy
  * Provider interface that combines normalizer and transformer functionality
  * for both request and response types
  */
-interface Provider<RequestType, ResponseType> {
+interface Provider<RequestType, ResponseType, StreamEventType, ErrorType> {
 
     // Request normalization and transformation
     fun normalizeRequest(request: RequestType): IntermittentRequest
@@ -39,13 +39,13 @@ interface Provider<RequestType, ResponseType> {
     fun normalizeResponse(response: ResponseType): IntermittentResponse
     fun transformResponse(response: IntermittentResponse): ResponseType
 
-    // Streaming support - simplified for now
-    fun normalizeStreamingResponse(stream: Flow<ResponseType>): Flow<IntermittentStreamEvent>
-    fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<ResponseType>
+    // Streaming support
+    fun normalizeStreamingResponse(stream: Flow<StreamEventType>): Flow<IntermittentStreamEvent>
+    fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<StreamEventType>
 
-    // Error handling - simplified for now
-    fun normalizeError(error: ResponseType): IntermittentError
-    fun transformError(error: IntermittentError): ResponseType
+    // Error handling
+    fun normalizeError(error: ErrorType): IntermittentError
+    fun transformError(error: IntermittentError): ErrorType
 }
 
 /**
@@ -65,7 +65,10 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
     /**
      * Register a transformer with explicit type
      */
-    fun <T : Any> registerTransformer(type: KClass<T>, transformer: Transformer<T>) {
+    fun <RequestType : Any, ResponseType : Any, ErrorType : Any> registerTransformer(
+        type: KClass<*>,
+        transformer: Transformer<RequestType, ResponseType, ErrorType>,
+    ) {
         registry.registerTransformer(type, transformer)
     }
 
@@ -83,7 +86,9 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
      * Register multiple transformers at once
      * Note: This requires explicit type specification for each transformer
      */
-    fun <T : Any> registerTransformers(vararg transformers: Pair<KClass<T>, Transformer<T>>) {
+    fun <RequestType : Any, ResponseType : Any, ErrorType : Any> registerTransformers(
+        vararg transformers: Pair<KClass<*>, Transformer<RequestType, ResponseType, ErrorType>>,
+    ) {
         transformers.forEach { (type, transformer) ->
             registry.registerTransformer(type, transformer)
         }
@@ -92,10 +97,10 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
     /**
      * Register a provider that implements both normalizer and transformer functionality
      */
-    fun <RequestType : Any, ResponseType : Any> registerProvider(
+    fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
         requestType: KClass<RequestType>,
         responseType: KClass<ResponseType>,
-        provider: Provider<RequestType, ResponseType>,
+        provider: Provider<RequestType, ResponseType, StreamEventType, ErrorType>,
     ) {
         // Create adapter normalizers and transformers for the registry
         val requestNormalizer = object : Normalizer<RequestType> {
@@ -105,25 +110,23 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
             override fun normalizeError(error: RequestType): IntermittentError = throw UnsupportedOperationException("Request type cannot be used for errors")
         }
 
-        val requestTransformer = object : Transformer<RequestType> {
+        val requestTransformer = object : Transformer<RequestType, RequestType, RequestType> {
             override fun transformRequest(request: IntermittentRequest): RequestType = provider.transformRequest(request)
             override fun transformResponse(response: IntermittentResponse): RequestType = throw UnsupportedOperationException("Request type cannot be used as response")
-            override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<RequestType> = throw UnsupportedOperationException("Request type cannot be used for streaming")
             override fun transformError(error: IntermittentError): RequestType = throw UnsupportedOperationException("Request type cannot be used for errors")
         }
 
         val responseNormalizer = object : Normalizer<ResponseType> {
             override fun normalizeRequest(request: ResponseType): IntermittentRequest = throw UnsupportedOperationException("Response type cannot be used as request")
             override fun normalizeResponse(response: ResponseType): IntermittentResponse = provider.normalizeResponse(response)
-            override fun normalizeStreamingResponse(stream: Flow<ResponseType>): Flow<IntermittentStreamEvent> = provider.normalizeStreamingResponse(stream)
-            override fun normalizeError(error: ResponseType): IntermittentError = provider.normalizeError(error)
+            override fun normalizeStreamingResponse(stream: Flow<ResponseType>): Flow<IntermittentStreamEvent> = throw UnsupportedOperationException("Response type cannot be used for streaming - use StreamEventType")
+            override fun normalizeError(error: ResponseType): IntermittentError = throw UnsupportedOperationException("Response type cannot be used for errors - use ErrorType")
         }
 
-        val responseTransformer = object : Transformer<ResponseType> {
+        val responseTransformer = object : Transformer<ResponseType, ResponseType, ResponseType> {
             override fun transformRequest(request: IntermittentRequest): ResponseType = throw UnsupportedOperationException("Response type cannot be used as request")
             override fun transformResponse(response: IntermittentResponse): ResponseType = provider.transformResponse(response)
-            override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<ResponseType> = provider.transformStreamingResponse(stream)
-            override fun transformError(error: IntermittentError): ResponseType = provider.transformError(error)
+            override fun transformError(error: IntermittentError): ResponseType = throw UnsupportedOperationException("Response type cannot be used for errors - use ErrorType")
         }
 
         registry.registerNormalizer(requestType, requestNormalizer)
@@ -135,13 +138,13 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
     /**
      * Register multiple providers at once
      */
-    fun registerProviders(vararg providers: Triple<KClass<*>, KClass<*>, Provider<*, *>>) {
+    fun registerProviders(vararg providers: Triple<KClass<*>, KClass<*>, Provider<*, *, *, *>>) {
         providers.forEach { (requestType, responseType, provider) ->
             @Suppress("UNCHECKED_CAST")
             registerProvider(
                 requestType as KClass<Any>,
                 responseType as KClass<Any>,
-                provider as Provider<Any, Any>,
+                provider as Provider<Any, Any, Any, Any>,
             )
         }
     }
@@ -168,7 +171,10 @@ object GlobalProviderAutoRegistration {
         autoRegistration.registerNormalizer(type, normalizer)
     }
 
-    fun <T : Any> registerTransformer(type: KClass<T>, transformer: Transformer<T>) {
+    fun <RequestType : Any, ResponseType : Any, ErrorType : Any> registerTransformer(
+        type: KClass<*>,
+        transformer: Transformer<RequestType, ResponseType, ErrorType>,
+    ) {
         autoRegistration.registerTransformer(type, transformer)
     }
 
@@ -176,19 +182,21 @@ object GlobalProviderAutoRegistration {
         autoRegistration.registerNormalizers(*normalizers)
     }
 
-    fun <T : Any> registerTransformers(vararg transformers: Pair<KClass<T>, Transformer<T>>) {
+    fun <RequestType : Any, ResponseType : Any, ErrorType : Any> registerTransformers(
+        vararg transformers: Pair<KClass<*>, Transformer<RequestType, ResponseType, ErrorType>>,
+    ) {
         autoRegistration.registerTransformers(*transformers)
     }
 
-    fun <RequestType : Any, ResponseType : Any> registerProvider(
+    fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
         requestType: KClass<RequestType>,
         responseType: KClass<ResponseType>,
-        provider: Provider<RequestType, ResponseType>,
+        provider: Provider<RequestType, ResponseType, StreamEventType, ErrorType>,
     ) {
         autoRegistration.registerProvider(requestType, responseType, provider)
     }
 
-    fun registerProviders(vararg providers: Triple<KClass<*>, KClass<*>, Provider<*, *>>) {
+    fun registerProviders(vararg providers: Triple<KClass<*>, KClass<*>, Provider<*, *, *, *>>) {
         autoRegistration.registerProviders(*providers)
     }
 }

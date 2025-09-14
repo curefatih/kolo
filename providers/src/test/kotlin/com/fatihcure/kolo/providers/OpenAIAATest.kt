@@ -139,27 +139,27 @@ class OpenAIAATest {
 
     @Test
     fun `test error response A-A conversion`() {
-        // Create original OpenAI error response
-        val originalErrorResponse = OpenAIResponse(
-            id = "",
-            model = "",
-            choices = emptyList(),
-            usage = null,
+        // Create original OpenAI error
+        val originalError = com.fatihcure.kolo.normalizers.openai.OpenAIError(
+            type = "invalid_request_error",
+            message = "Invalid request",
+            code = "invalid_request",
+            param = "model",
         )
 
-        // Convert to IntermittentError and back to OpenAIResponse
-        val normalizedError = provider.normalizeError(originalErrorResponse)
-        val convertedErrorResponse = provider.transformError(normalizedError)
+        // Convert to IntermittentError and back to OpenAIError
+        val normalizedError = provider.normalizeError(originalError)
+        val convertedError = provider.transformError(normalizedError)
 
         // Verify error conversion
-        assertEquals(originalErrorResponse.id, convertedErrorResponse.id)
-        assertEquals(originalErrorResponse.model, convertedErrorResponse.model)
-        assertEquals(originalErrorResponse.choices.size, convertedErrorResponse.choices.size)
-        assertEquals(originalErrorResponse.usage, convertedErrorResponse.usage)
+        assertEquals(originalError.type, convertedError.type)
+        assertEquals(originalError.message, convertedError.message)
+        assertEquals(originalError.code, convertedError.code)
+        assertEquals(originalError.param, convertedError.param)
 
         // Verify JSON serialization produces identical output
-        val originalJson = objectMapper.writeValueAsString(originalErrorResponse)
-        val convertedJson = objectMapper.writeValueAsString(convertedErrorResponse)
+        val originalJson = objectMapper.writeValueAsString(originalError)
+        val convertedJson = objectMapper.writeValueAsString(convertedError)
         assertEquals(originalJson, convertedJson, "JSON serialization should produce identical output")
     }
 

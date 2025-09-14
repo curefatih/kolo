@@ -6,7 +6,7 @@ package com.fatihcure.kolo.core
  */
 class Kolo<SourceType, TargetType>(
     private val sourceNormalizer: Normalizer<SourceType>,
-    private val targetTransformer: Transformer<TargetType>,
+    private val targetTransformer: Transformer<TargetType, TargetType, TargetType>,
 ) {
     val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
 

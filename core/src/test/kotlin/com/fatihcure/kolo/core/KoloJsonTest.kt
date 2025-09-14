@@ -33,17 +33,13 @@ class KoloJsonTest {
             }
         }
 
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -89,17 +85,13 @@ class KoloJsonTest {
             }
         }
 
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -169,17 +161,13 @@ class KoloJsonTest {
             }
         }
 
-        val sourceTransformer = object : Transformer<String> {
+        val sourceTransformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -187,17 +175,13 @@ class KoloJsonTest {
             }
         }
 
-        val targetTransformer = object : Transformer<String> {
+        val targetTransformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
