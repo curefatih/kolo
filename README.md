@@ -2,6 +2,11 @@
 
 ---
 
+> [!IMPORTANT]  
+> This library is in development mode and the API is subject to change.
+
+---
+
 ## How It Works
 
 This library provides a unified way to translate requests and responses between different Large Language Model (LLM) providers. It allows developers to integrate with one interface (e.g., OpenAI’s API) while actually calling another provider (e.g., Anthropic, Mistral, etc.), without rewriting application logic.
