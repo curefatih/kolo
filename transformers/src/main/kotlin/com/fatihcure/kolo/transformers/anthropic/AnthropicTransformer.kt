@@ -1,6 +1,6 @@
 package com.fatihcure.kolo.transformers.anthropic
 
-import com.fatihcure.kolo.core.ErrorTransformer
+import com.fatihcure.kolo.core.CombinedTransformer
 import com.fatihcure.kolo.core.IntermittentError
 import com.fatihcure.kolo.core.IntermittentMessage
 import com.fatihcure.kolo.core.IntermittentRequest
@@ -8,9 +8,6 @@ import com.fatihcure.kolo.core.IntermittentResponse
 import com.fatihcure.kolo.core.IntermittentStreamEvent
 import com.fatihcure.kolo.core.IntermittentUsage
 import com.fatihcure.kolo.core.MessageRole
-import com.fatihcure.kolo.core.RequestTransformer
-import com.fatihcure.kolo.core.ResponseTransformer
-import com.fatihcure.kolo.core.StreamingTransformer
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicContent
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicDelta
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicError
@@ -25,7 +22,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Transformer implementation for Anthropic Claude API
  */
-class AnthropicTransformer : RequestTransformer<AnthropicRequest>, ResponseTransformer<AnthropicResponse>, StreamingTransformer<AnthropicStreamEvent>, ErrorTransformer<AnthropicError> {
+class AnthropicTransformer : CombinedTransformer<AnthropicRequest, AnthropicResponse, AnthropicError, AnthropicStreamEvent> {
 
     override fun transformRequest(request: IntermittentRequest): AnthropicRequest {
         val systemMessage = request.messages.find { it.role == MessageRole.SYSTEM }

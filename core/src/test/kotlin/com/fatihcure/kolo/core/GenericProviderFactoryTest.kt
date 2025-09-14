@@ -59,17 +59,13 @@ class GenericProviderFactoryTest {
             }
         }
 
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return request.messages.first().content
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return response.choices.first().message?.content ?: ""
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -88,10 +84,9 @@ class GenericProviderFactoryTest {
 
     @Test
     fun `should throw exception when normalizer is not registered`() {
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String = ""
             override fun transformResponse(response: IntermittentResponse): String = ""
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> = kotlinx.coroutines.flow.flowOf()
             override fun transformError(error: IntermittentError): String = ""
         }
 
@@ -135,10 +130,9 @@ class GenericProviderFactoryTest {
             override fun normalizeError(error: String): IntermittentError = IntermittentError("test", "test")
         }
 
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String = ""
             override fun transformResponse(response: IntermittentResponse): String = ""
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> = kotlinx.coroutines.flow.flowOf()
             override fun transformError(error: IntermittentError): String = ""
         }
 
@@ -158,17 +152,15 @@ class GenericProviderFactoryTest {
             override fun normalizeError(error: String): IntermittentError = IntermittentError("test", "test")
         }
 
-        val transformer1 = object : Transformer<String> {
+        val transformer1 = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String = ""
             override fun transformResponse(response: IntermittentResponse): String = ""
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> = kotlinx.coroutines.flow.flowOf()
             override fun transformError(error: IntermittentError): String = ""
         }
 
-        val transformer2 = object : Transformer<Int> {
+        val transformer2 = object : Transformer<Int, Int, Int> {
             override fun transformRequest(request: IntermittentRequest): Int = 0
             override fun transformResponse(response: IntermittentResponse): Int = 0
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<Int> = kotlinx.coroutines.flow.flowOf()
             override fun transformError(error: IntermittentError): Int = 0
         }
 

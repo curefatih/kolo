@@ -19,7 +19,7 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
         val sourceNormalizer = registry.getNormalizer(sourceType)
             ?: throw IllegalArgumentException("No normalizer found for source type: ${sourceType.simpleName}")
 
-        val targetTransformer = registry.getTransformer(targetType)
+        val targetTransformer = registry.getTransformer<TargetType, TargetType, TargetType>(targetType)
             ?: throw IllegalArgumentException("No transformer found for target type: ${targetType.simpleName}")
 
         return Kolo(sourceNormalizer, targetTransformer)
@@ -38,13 +38,24 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
         val targetNormalizer = registry.getNormalizer(targetType)
             ?: throw IllegalArgumentException("No normalizer found for target type: ${targetType.simpleName}")
 
-        val sourceTransformer = registry.getTransformer(sourceType)
+        val sourceTransformer = registry.getTransformer<SourceType, SourceType, SourceType>(sourceType)
             ?: throw IllegalArgumentException("No transformer found for source type: ${sourceType.simpleName}")
 
-        val targetTransformer = registry.getTransformer(targetType)
+        val targetTransformer = registry.getTransformer<TargetType, TargetType, TargetType>(targetType)
             ?: throw IllegalArgumentException("No transformer found for target type: ${targetType.simpleName}")
 
-        return BidirectionalKolo(sourceNormalizer, targetNormalizer, sourceTransformer, targetTransformer)
+        // Try to get streaming transformers if available
+        val sourceStreamingTransformer = registry.getStreamingTransformer<SourceType>(sourceType)
+        val targetStreamingTransformer = registry.getStreamingTransformer<TargetType>(targetType)
+
+        return BidirectionalKolo(
+            sourceNormalizer,
+            targetNormalizer,
+            sourceTransformer,
+            targetTransformer,
+            sourceStreamingTransformer,
+            targetStreamingTransformer,
+        )
     }
 
     /**

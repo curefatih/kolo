@@ -1,10 +1,14 @@
 package com.fatihcure.kolo.providers
 
 import com.fatihcure.kolo.core.Provider
+import com.fatihcure.kolo.normalizers.anthropic.AnthropicError
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse
+import com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent
+import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
+import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -32,10 +36,10 @@ class ProviderTypealiasTest {
 
         // When & Then
         // These should compile without issues, indicating correct generic type implementation
-        val openAIProviderTyped: Provider<OpenAIRequest, OpenAIResponse> = openAIProvider
-        val anthropicProviderTyped: Provider<AnthropicRequest, AnthropicResponse> = anthropicProvider
+        val openAIProviderTyped: Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamingResponse, OpenAIError> = openAIProvider
+        val anthropicProviderTyped: Provider<AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError> = anthropicProvider
 
-        assertThat(openAIProviderTyped).isNotNull
-        assertThat(anthropicProviderTyped).isNotNull
+        assertThat(openAIProviderTyped).isNotNull()
+        assertThat(anthropicProviderTyped).isNotNull()
     }
 }

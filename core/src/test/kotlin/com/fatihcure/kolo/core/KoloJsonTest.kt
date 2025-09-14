@@ -33,17 +33,13 @@ class KoloJsonTest {
             }
         }
 
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -89,17 +85,13 @@ class KoloJsonTest {
             }
         }
 
-        val transformer = object : Transformer<String> {
+        val transformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -113,7 +105,7 @@ class KoloJsonTest {
         val jsonResult = kolo.convertRequestToJson(sourceRequest)
 
         // Parse the JSON to verify it contains the expected structure
-        val parsedRequest = kolo.objectMapper.readValue(jsonResult, String::class.java)
+        val parsedRequest = Kolo.objectMapper.readValue(jsonResult, String::class.java)
         assertThat(parsedRequest).isEqualTo("Hello from source")
     }
 
@@ -169,17 +161,13 @@ class KoloJsonTest {
             }
         }
 
-        val sourceTransformer = object : Transformer<String> {
+        val sourceTransformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -187,17 +175,13 @@ class KoloJsonTest {
             }
         }
 
-        val targetTransformer = object : Transformer<String> {
+        val targetTransformer = object : Transformer<String, String, String> {
             override fun transformRequest(request: IntermittentRequest): String {
                 return "transformed: ${request.messages.first().content}"
             }
 
             override fun transformResponse(response: IntermittentResponse): String {
                 return "response: ${response.choices.first().message?.content}"
-            }
-
-            override fun transformStreamingResponse(stream: kotlinx.coroutines.flow.Flow<IntermittentStreamEvent>): kotlinx.coroutines.flow.Flow<String> {
-                return kotlinx.coroutines.flow.flowOf()
             }
 
             override fun transformError(error: IntermittentError): String {
@@ -211,7 +195,7 @@ class KoloJsonTest {
         val jsonResult = bidirectionalKolo.convertResponseToJson(targetResponse)
 
         // Parse the JSON to verify it contains the expected structure
-        val parsedResponse = bidirectionalKolo.objectMapper.readValue(jsonResult, String::class.java)
+        val parsedResponse = BidirectionalKolo.objectMapper.readValue(jsonResult, String::class.java)
         assertThat(parsedResponse).isEqualTo("Hello from target")
     }
 }

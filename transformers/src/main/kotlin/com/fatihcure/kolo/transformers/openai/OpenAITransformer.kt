@@ -1,6 +1,6 @@
 package com.fatihcure.kolo.transformers.openai
 
-import com.fatihcure.kolo.core.ErrorTransformer
+import com.fatihcure.kolo.core.CombinedTransformer
 import com.fatihcure.kolo.core.IntermittentChoice
 import com.fatihcure.kolo.core.IntermittentDelta
 import com.fatihcure.kolo.core.IntermittentError
@@ -10,16 +10,13 @@ import com.fatihcure.kolo.core.IntermittentResponse
 import com.fatihcure.kolo.core.IntermittentStreamEvent
 import com.fatihcure.kolo.core.IntermittentUsage
 import com.fatihcure.kolo.core.MessageRole
-import com.fatihcure.kolo.core.RequestTransformer
-import com.fatihcure.kolo.core.ResponseTransformer
-import com.fatihcure.kolo.core.StreamingTransformer
 import com.fatihcure.kolo.normalizers.openai.OpenAIChoice
 import com.fatihcure.kolo.normalizers.openai.OpenAIDelta
 import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAIMessage
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
-import com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent
+import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
 import com.fatihcure.kolo.normalizers.openai.OpenAIUsage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,7 +24,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Transformer implementation for OpenAI API
  */
-class OpenAITransformer : RequestTransformer<OpenAIRequest>, ResponseTransformer<OpenAIResponse>, StreamingTransformer<OpenAIStreamEvent>, ErrorTransformer<OpenAIError> {
+class OpenAITransformer : CombinedTransformer<OpenAIRequest, OpenAIResponse, OpenAIError, OpenAIStreamingResponse> {
 
     override fun transformRequest(request: IntermittentRequest): OpenAIRequest {
         return OpenAIRequest(
@@ -52,31 +49,31 @@ class OpenAITransformer : RequestTransformer<OpenAIRequest>, ResponseTransformer
         )
     }
 
-    override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamEvent> {
+    override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamingResponse> {
         return stream.map { event ->
             when (event) {
-                is IntermittentStreamEvent.MessageStart -> OpenAIStreamEvent(
+                is IntermittentStreamEvent.MessageStart -> OpenAIStreamingResponse(
                     id = event.id,
                     model = event.model,
                 )
-                is IntermittentStreamEvent.MessageDelta -> OpenAIStreamEvent(
+                is IntermittentStreamEvent.MessageDelta -> OpenAIStreamingResponse(
                     choices = listOf(
-                        OpenAIChoice(
+                        com.fatihcure.kolo.normalizers.openai.OpenAIStreamingChoice(
                             index = 0,
-                            delta = transformDelta(event.delta),
+                            delta = transformStreamingDelta(event.delta),
                         ),
                     ),
                 )
-                is IntermittentStreamEvent.MessageEnd -> OpenAIStreamEvent(
+                is IntermittentStreamEvent.MessageEnd -> OpenAIStreamingResponse(
                     choices = listOf(
-                        OpenAIChoice(
+                        com.fatihcure.kolo.normalizers.openai.OpenAIStreamingChoice(
                             index = 0,
                             finishReason = event.finishReason,
                         ),
                     ),
                     usage = event.usage?.let { transformUsage(it) },
                 )
-                is IntermittentStreamEvent.Error -> OpenAIStreamEvent(
+                is IntermittentStreamEvent.Error -> OpenAIStreamingResponse(
                     error = transformError(event.error),
                 )
             }
@@ -116,6 +113,21 @@ class OpenAITransformer : RequestTransformer<OpenAIRequest>, ResponseTransformer
 
     private fun transformDelta(delta: IntermittentDelta): OpenAIDelta {
         return OpenAIDelta(
+            role = delta.role?.let {
+                when (it) {
+                    MessageRole.SYSTEM -> "system"
+                    MessageRole.USER -> "user"
+                    MessageRole.ASSISTANT -> "assistant"
+                    MessageRole.TOOL -> "tool"
+                }
+            },
+            content = delta.content,
+            name = delta.name,
+        )
+    }
+
+    private fun transformStreamingDelta(delta: IntermittentDelta): com.fatihcure.kolo.normalizers.openai.OpenAIStreamingDelta {
+        return com.fatihcure.kolo.normalizers.openai.OpenAIStreamingDelta(
             role = delta.role?.let {
                 when (it) {
                     MessageRole.SYSTEM -> "system"
