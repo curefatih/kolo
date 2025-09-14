@@ -225,7 +225,7 @@ fun streamingWithBuilderExample() = runBlocking {
     val sourceStreamingTransformer = /* your source streaming transformer */
     val targetStreamingTransformer = /* your target streaming transformer */
 
-    val bidirectionalKolo = bidirectionalKoloBuilder<String, String>()
+    val bidirectionalKolo = bidirectionalKoloBuilder<String, String, String, String>()
         .withSourceNormalizer(sourceNormalizer)
         .withTargetNormalizer(targetNormalizer)
         .withSourceTransformer(sourceTransformer)
