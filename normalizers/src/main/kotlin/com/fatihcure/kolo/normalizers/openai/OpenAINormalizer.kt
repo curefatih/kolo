@@ -64,10 +64,16 @@ class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<Op
                             finishReason = choice.finishReason,
                             usage = response.usage?.let { normalizeUsage(it) },
                         )
-                        else -> throw IllegalArgumentException("Unknown OpenAI streaming response type")
+                        else -> throw IllegalArgumentException("Unknown OpenAI streaming choice type in response: $response")
                     }
                 }
-                else -> throw IllegalArgumentException("Unknown OpenAI streaming response type")
+                response.choices.isNullOrEmpty() && response.usage != null -> {
+                    IntermittentStreamEvent.MessageEnd(
+                        finishReason = "stop", // Using 'stop' as a default for usage-only chunks
+                        usage = normalizeUsage(response.usage!!),
+                    )
+                }
+                else -> throw IllegalArgumentException("Unknown OpenAI streaming response type: $response")
             }
         }
     }

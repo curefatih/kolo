@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.normalizers.openai
 
+import com.fatihcure.kolo.core.IntermittentStreamEvent
 import com.fatihcure.kolo.core.MessageRole
 import com.fatihcure.kolo.normalizers.TestUtils
 import kotlinx.coroutines.flow.flowOf
@@ -296,7 +297,36 @@ class OpenAINormalizerTest {
                 TestUtils.collectAll(normalizer.normalizeStreamingResponse(streamEvents))
             }
         }.isInstanceOf(IllegalArgumentException::class.java)
-            .hasMessageContaining("Unknown OpenAI streaming response type")
+            .hasMessageContaining("Unknown OpenAI streaming choice type in response")
+    }
+
+    @Test
+    fun `normalizeStreamingResponse should handle usage-only chunks`() = TestUtils.runTest<Unit> {
+        // Given
+        val streamEvents = flowOf(
+            OpenAIStreamingResponse(
+                choices = emptyList(), // Empty choices array
+                usage = OpenAIUsage(
+                    promptTokens = 10,
+                    completionTokens = 5,
+                    totalTokens = 15,
+                ),
+            ),
+        )
+
+        // When
+        val result = TestUtils.collectAll(normalizer.normalizeStreamingResponse(streamEvents))
+
+        // Then
+        assertThat(result).hasSize(1)
+        val event = result.first()
+        assertThat(event).isInstanceOf(IntermittentStreamEvent.MessageEnd::class.java)
+        val messageEnd = event as IntermittentStreamEvent.MessageEnd
+        assertThat(messageEnd.finishReason).isEqualTo("stop")
+        assertThat(messageEnd.usage).isNotNull
+        assertThat(messageEnd.usage!!.promptTokens).isEqualTo(10)
+        assertThat(messageEnd.usage!!.completionTokens).isEqualTo(5)
+        assertThat(messageEnd.usage!!.totalTokens).isEqualTo(15)
     }
 
     @Test
