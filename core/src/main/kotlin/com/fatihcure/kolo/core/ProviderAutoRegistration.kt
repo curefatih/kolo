@@ -87,7 +87,7 @@ interface StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorTyp
      * @param rawStream Flow of raw string data from the streaming response
      * @return Flow of StreamEventType objects
      */
-    fun processStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<StreamEventType>
+    fun processRawStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<StreamEventType>
 }
 
 /**
@@ -118,7 +118,6 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
             registry.registerProvider(type, provider)
         }
     }
-
 }
 
 /**

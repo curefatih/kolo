@@ -25,7 +25,6 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
         return Kolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>(sourceProvider, targetProvider)
     }
 
-
     /**
      * Check if a conversion is possible from source to target
      */
@@ -89,7 +88,6 @@ object GlobalProviderFactory {
     ): Kolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType> {
         return factory.createKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>(sourceProviderType, targetProviderType)
     }
-
 
     fun canConvert(
         sourceProviderType: KClass<*>,

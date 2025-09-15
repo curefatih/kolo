@@ -2,22 +2,21 @@ package com.fatihcure.kolo.core
 
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 /**
  * Main Kolo class that orchestrates the conversion between different LLM providers
  * using the intermittent format as an intermediary
  */
 class Kolo<
-        SourceRequestType,
-        SourceResponseType,
-        SourceStreamingResponseType,
-        SourceErrorType,
-        TargetRequestType,
-        TargetResponseType,
-        TargetStreamingResponseType,
-        TargetErrorType,
-        >(
+    SourceRequestType,
+    SourceResponseType,
+    SourceStreamingResponseType,
+    SourceErrorType,
+    TargetRequestType,
+    TargetResponseType,
+    TargetStreamingResponseType,
+    TargetErrorType,
+    >(
     private val sourceProvider: StreamingProvider<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType>,
     private val targetProvider: StreamingProvider<TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>,
 ) {
