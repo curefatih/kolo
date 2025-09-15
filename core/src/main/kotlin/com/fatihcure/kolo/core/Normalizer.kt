@@ -18,13 +18,20 @@ interface Normalizer<T> {
      */
     fun normalizeResponse(response: T): IntermittentResponse
 
-    /**
-     * Normalizes a provider-specific streaming response into the intermittent format
-     */
-    fun normalizeStreamingResponse(stream: Flow<T>): Flow<IntermittentStreamEvent>
 
     /**
      * Normalizes a provider-specific error into the intermittent format
      */
     fun normalizeError(error: T): IntermittentError
+}
+
+
+/**
+ * Interface for normalizing provider-specific streaming responses into the intermittent format
+ */
+interface StreamingNormalizer<T> {
+    /**
+     * Normalizes a provider-specific streaming response into the intermittent format
+     */
+    fun normalizeStreamingResponse(stream: Flow<T>): Flow<IntermittentStreamEvent>
 }
