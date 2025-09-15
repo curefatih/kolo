@@ -1,10 +1,90 @@
 package com.fatihcure.kolo.core
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class SimpleBidirectionalKoloTest {
+
+    // Helper function to create BidirectionalKolo with same type for regular and streaming responses
+    private fun <SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> createBidirectionalKoloWithSameStreamingTypes(
+        sourceNormalizer: Normalizer<SourceRequestType>,
+        sourceTransformer: Transformer<SourceRequestType, SourceResponseType, SourceResponseType>,
+        targetNormalizer: Normalizer<TargetResponseType>,
+        targetTransformer: Transformer<TargetRequestType, TargetResponseType, TargetResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, SourceResponseType, TargetRequestType, TargetResponseType, TargetResponseType> {
+        return BidirectionalKolo(
+            sourceNormalizer = sourceNormalizer,
+            sourceTransformer = sourceTransformer,
+            sourceStreamingNormalizer = sourceNormalizer as Normalizer<SourceResponseType>,
+            sourceStreamingTransformer = object : StreamingTransformer<SourceResponseType> {
+                override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<SourceResponseType> {
+                    return stream.map { event ->
+                        when (event) {
+                            is IntermittentStreamEvent.MessageStart -> sourceTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = event.id,
+                                    model = event.model,
+                                    choices = listOf(IntermittentChoice(index = 0)),
+                                ),
+                            ) as SourceResponseType
+                            is IntermittentStreamEvent.MessageDelta -> sourceTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, delta = event.delta)),
+                                ),
+                            ) as SourceResponseType
+                            is IntermittentStreamEvent.MessageEnd -> sourceTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, finishReason = event.finishReason)),
+                                    usage = event.usage,
+                                ),
+                            ) as SourceResponseType
+                            is IntermittentStreamEvent.Error -> sourceTransformer.transformError(event.error) as SourceResponseType
+                        }
+                    }
+                }
+            },
+            targetNormalizer = targetNormalizer,
+            targetTransformer = targetTransformer,
+            targetStreamingNormalizer = targetNormalizer as Normalizer<TargetResponseType>,
+            targetStreamingTransformer = object : StreamingTransformer<TargetResponseType> {
+                override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<TargetResponseType> {
+                    return stream.map { event ->
+                        when (event) {
+                            is IntermittentStreamEvent.MessageStart -> targetTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = event.id,
+                                    model = event.model,
+                                    choices = listOf(IntermittentChoice(index = 0)),
+                                ),
+                            ) as TargetResponseType
+                            is IntermittentStreamEvent.MessageDelta -> targetTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, delta = event.delta)),
+                                ),
+                            ) as TargetResponseType
+                            is IntermittentStreamEvent.MessageEnd -> targetTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, finishReason = event.finishReason)),
+                                    usage = event.usage,
+                                ),
+                            ) as TargetResponseType
+                            is IntermittentStreamEvent.Error -> targetTransformer.transformError(event.error) as TargetResponseType
+                        }
+                    }
+                }
+            },
+        )
+    }
 
     @Test
     fun `should create BidirectionalKolo instance`() {
@@ -102,7 +182,7 @@ class SimpleBidirectionalKoloTest {
         }
 
         // Create BidirectionalKolo instance
-        val bidirectionalKolo = BidirectionalKolo(
+        val bidirectionalKolo = createBidirectionalKoloWithSameStreamingTypes(
             sourceNormalizer = sourceNormalizer,
             sourceTransformer = sourceTransformer,
             targetNormalizer = targetNormalizer,

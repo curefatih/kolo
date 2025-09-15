@@ -45,8 +45,10 @@ class KoloProviderTest {
         val bidirectionalKolo = koloProvider.createBidirectionalKolo(
             OpenAIRequest::class,
             OpenAIResponse::class,
+            com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse::class,
             AnthropicRequest::class,
             AnthropicResponse::class,
+            com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent::class,
         )
 
         // Then
@@ -67,7 +69,7 @@ class KoloProviderTest {
     @Test
     fun `should create bidirectional Kolo instance using reified types`() {
         // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, AnthropicRequest, AnthropicResponse>()
+        val bidirectionalKolo = koloProvider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent>()
 
         // Then
         assertThat(bidirectionalKolo).isNotNull

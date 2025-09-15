@@ -26,32 +26,27 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
     }
 
     /**
-     * Create a bidirectional Kolo instance for converting between source and target
-     * @deprecated This method is deprecated due to breaking changes in BidirectionalKolo signature.
-     * Use createBidirectionalKoloV2 instead.
+     * Create a bidirectional Kolo instance for converting between different request and response types with separate streaming types
      */
-    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2(sourceType, targetType, sourceType, targetType)"))
-    fun <SourceType : Any, TargetType : Any> createBidirectionalKolo(
-        sourceType: KClass<SourceType>,
-        targetType: KClass<TargetType>,
-    ): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
-        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
-    }
-
-    /**
-     * Create a bidirectional Kolo instance for converting between different request and response types
-     */
-    fun <SourceRequestType : Any, SourceResponseType : Any, TargetRequestType : Any, TargetResponseType : Any> createBidirectionalKoloV2(
+    fun <SourceRequestType : Any, SourceResponseType : Any, SourceStreamingResponseType : Any, TargetRequestType : Any, TargetResponseType : Any, TargetStreamingResponseType : Any> createBidirectionalKolo(
         sourceRequestType: KClass<SourceRequestType>,
         sourceResponseType: KClass<SourceResponseType>,
+        sourceStreamingResponseType: KClass<SourceStreamingResponseType>,
         targetRequestType: KClass<TargetRequestType>,
         targetResponseType: KClass<TargetResponseType>,
-    ): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
+        targetStreamingResponseType: KClass<TargetStreamingResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType> {
         val sourceNormalizer = registry.getNormalizer(sourceRequestType)
             ?: throw IllegalArgumentException("No normalizer found for source request type: ${sourceRequestType.simpleName}")
 
         val sourceTransformer = registry.getTransformer<SourceRequestType, SourceResponseType, SourceResponseType>(sourceResponseType)
             ?: throw IllegalArgumentException("No transformer found for source response type: ${sourceResponseType.simpleName}")
+
+        val sourceStreamingNormalizer = registry.getNormalizer(sourceStreamingResponseType)
+            ?: throw IllegalArgumentException("No normalizer found for source streaming response type: ${sourceStreamingResponseType.simpleName}")
+
+        val sourceStreamingTransformer = registry.getStreamingTransformer<SourceStreamingResponseType>(sourceStreamingResponseType)
+            ?: throw IllegalArgumentException("No streaming transformer found for source streaming response type: ${sourceStreamingResponseType.simpleName}")
 
         val targetNormalizer = registry.getNormalizer(targetResponseType)
             ?: throw IllegalArgumentException("No normalizer found for target response type: ${targetResponseType.simpleName}")
@@ -59,16 +54,20 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
         val targetTransformer = registry.getTransformer<TargetRequestType, TargetResponseType, TargetResponseType>(targetRequestType)
             ?: throw IllegalArgumentException("No transformer found for target request type: ${targetRequestType.simpleName}")
 
-        // Try to get streaming transformers if available
-        val sourceStreamingTransformer = registry.getStreamingTransformer<SourceResponseType>(sourceResponseType)
-        val targetStreamingTransformer = registry.getStreamingTransformer<TargetResponseType>(targetResponseType)
+        val targetStreamingNormalizer = registry.getNormalizer(targetStreamingResponseType)
+            ?: throw IllegalArgumentException("No normalizer found for target streaming response type: ${targetStreamingResponseType.simpleName}")
+
+        val targetStreamingTransformer = registry.getStreamingTransformer<TargetStreamingResponseType>(targetStreamingResponseType)
+            ?: throw IllegalArgumentException("No streaming transformer found for target streaming response type: ${targetStreamingResponseType.simpleName}")
 
         return BidirectionalKolo(
             sourceNormalizer,
             sourceTransformer,
+            sourceStreamingNormalizer,
+            sourceStreamingTransformer,
             targetNormalizer,
             targetTransformer,
-            sourceStreamingTransformer,
+            targetStreamingNormalizer,
             targetStreamingTransformer,
         )
     }
@@ -81,20 +80,10 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
     }
 
     /**
-     * Create a bidirectional Kolo instance using reified types
-     * @deprecated This method is deprecated due to breaking changes in BidirectionalKolo signature.
-     * Use createBidirectionalKoloV2 instead.
+     * Create a bidirectional Kolo instance using reified types with separate streaming types
      */
-    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2<SourceType, SourceType, TargetType, TargetType>()"))
-    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
-        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
-    }
-
-    /**
-     * Create a bidirectional Kolo instance using reified types
-     */
-    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any> createBidirectionalKoloV2(): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
-        return createBidirectionalKoloV2(SourceRequestType::class, SourceResponseType::class, TargetRequestType::class, TargetResponseType::class)
+    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified SourceStreamingResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any, reified TargetStreamingResponseType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType> {
+        return createBidirectionalKolo(SourceRequestType::class, SourceResponseType::class, SourceStreamingResponseType::class, TargetRequestType::class, TargetResponseType::class, TargetStreamingResponseType::class)
     }
 
     /**
@@ -171,34 +160,23 @@ object GlobalProviderFactory {
         return factory.createKolo(sourceType, targetType)
     }
 
-    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2(sourceType, targetType, sourceType, targetType)"))
-    fun <SourceType : Any, TargetType : Any> createBidirectionalKolo(
-        sourceType: KClass<SourceType>,
-        targetType: KClass<TargetType>,
-    ): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
-        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
-    }
-
-    fun <SourceRequestType : Any, SourceResponseType : Any, TargetRequestType : Any, TargetResponseType : Any> createBidirectionalKoloV2(
+    fun <SourceRequestType : Any, SourceResponseType : Any, SourceStreamingResponseType : Any, TargetRequestType : Any, TargetResponseType : Any, TargetStreamingResponseType : Any> createBidirectionalKolo(
         sourceRequestType: KClass<SourceRequestType>,
         sourceResponseType: KClass<SourceResponseType>,
+        sourceStreamingResponseType: KClass<SourceStreamingResponseType>,
         targetRequestType: KClass<TargetRequestType>,
         targetResponseType: KClass<TargetResponseType>,
-    ): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
-        return factory.createBidirectionalKoloV2(sourceRequestType, sourceResponseType, targetRequestType, targetResponseType)
+        targetStreamingResponseType: KClass<TargetStreamingResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType> {
+        return factory.createBidirectionalKolo(sourceRequestType, sourceResponseType, sourceStreamingResponseType, targetRequestType, targetResponseType, targetStreamingResponseType)
     }
 
     inline fun <reified SourceType : Any, reified TargetType : Any> createKolo(): Kolo<SourceType, TargetType> {
         return factory.createKolo<SourceType, TargetType>()
     }
 
-    @Deprecated("Use createBidirectionalKoloV2 instead", ReplaceWith("createBidirectionalKoloV2<SourceType, SourceType, TargetType, TargetType>()"))
-    inline fun <reified SourceType : Any, reified TargetType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceType, SourceType, TargetType, TargetType> {
-        throw UnsupportedOperationException("This method is deprecated. Use createBidirectionalKoloV2 instead.")
-    }
-
-    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any> createBidirectionalKoloV2(): BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> {
-        return factory.createBidirectionalKoloV2<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType>()
+    inline fun <reified SourceRequestType : Any, reified SourceResponseType : Any, reified SourceStreamingResponseType : Any, reified TargetRequestType : Any, reified TargetResponseType : Any, reified TargetStreamingResponseType : Any> createBidirectionalKolo(): BidirectionalKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType> {
+        return factory.createBidirectionalKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType>()
     }
 
     fun <SourceType : Any, TargetType : Any> canConvert(

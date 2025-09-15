@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.normalizers.openai
 
+import com.fatihcure.kolo.core.AutoRegisterNormalizer
 import com.fatihcure.kolo.core.ErrorNormalizer
 import com.fatihcure.kolo.core.IntermittentChoice
 import com.fatihcure.kolo.core.IntermittentDelta
@@ -19,6 +20,10 @@ import kotlinx.coroutines.flow.map
 /**
  * Normalizer implementation for OpenAI API
  */
+@AutoRegisterNormalizer(OpenAIRequest::class)
+@AutoRegisterNormalizer(OpenAIResponse::class)
+@AutoRegisterNormalizer(OpenAIStreamingResponse::class)
+@AutoRegisterNormalizer(OpenAIError::class)
 class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<OpenAIResponse>, StreamingNormalizer<OpenAIStreamingResponse>, ErrorNormalizer<OpenAIError> {
 
     override fun normalizeRequest(request: OpenAIRequest): IntermittentRequest {
