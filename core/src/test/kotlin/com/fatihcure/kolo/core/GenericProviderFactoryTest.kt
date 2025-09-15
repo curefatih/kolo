@@ -1,5 +1,7 @@
 package com.fatihcure.kolo.core
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -16,9 +18,9 @@ class GenericProviderFactoryTest {
     }
 
     @Test
-    fun `should create kolo instance when normalizer and transformer are registered`() {
-        // Register a normalizer and transformer
-        val normalizer = object : Normalizer<String> {
+    fun `should create kolo instance when providers are registered`() {
+        // Register a streaming provider
+        val provider = object : StreamingProvider<String, String, String, String> {
             override fun normalizeRequest(request: String): IntermittentRequest {
                 return IntermittentRequest(
                     messages = listOf(
@@ -29,6 +31,10 @@ class GenericProviderFactoryTest {
                     ),
                     model = "test-model",
                 )
+            }
+
+            override fun transformRequest(request: IntermittentRequest): String {
+                return request.messages.first().content
             }
 
             override fun normalizeResponse(response: String): IntermittentResponse {
@@ -47,8 +53,16 @@ class GenericProviderFactoryTest {
                 )
             }
 
-            override fun normalizeStreamingResponse(stream: kotlinx.coroutines.flow.Flow<String>): kotlinx.coroutines.flow.Flow<IntermittentStreamEvent> {
-                return kotlinx.coroutines.flow.flowOf()
+            override fun transformResponse(response: IntermittentResponse): String {
+                return response.choices.first().message?.content ?: ""
+            }
+
+            override fun normalizeStreamingResponse(stream: Flow<String>): Flow<IntermittentStreamEvent> {
+                return flowOf()
+            }
+
+            override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<String> {
+                return flowOf()
             }
 
             override fun normalizeError(error: String): IntermittentError {
@@ -57,118 +71,102 @@ class GenericProviderFactoryTest {
                     message = error,
                 )
             }
-        }
-
-        val transformer = object : Transformer<String, String, String> {
-            override fun transformRequest(request: IntermittentRequest): String {
-                return request.messages.first().content
-            }
-
-            override fun transformResponse(response: IntermittentResponse): String {
-                return response.choices.first().message?.content ?: ""
-            }
 
             override fun transformError(error: IntermittentError): String {
                 return error.message
             }
+
+            override fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
+                return flowOf()
+            }
+
+            override fun processStreamingDataToStreamEvent(stream: Flow<IntermittentStreamEvent>): Flow<String> {
+                return flowOf()
+            }
+
+            override fun processRawStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<String> {
+                return flowOf()
+            }
         }
 
-        registry.registerNormalizer(String::class, normalizer)
-        registry.registerTransformer(String::class, transformer)
+        registry.registerProvider(String::class, provider)
 
         // Create a Kolo instance
-        val kolo = factory.createKolo(String::class, String::class)
+        val kolo = factory.createKolo<String, String, String, String, String, String, String, String>(String::class, String::class)
 
         assertThat(kolo).isNotNull()
     }
 
     @Test
-    fun `should throw exception when normalizer is not registered`() {
-        val transformer = object : Transformer<String, String, String> {
-            override fun transformRequest(request: IntermittentRequest): String = ""
-            override fun transformResponse(response: IntermittentResponse): String = ""
-            override fun transformError(error: IntermittentError): String = ""
-        }
+    fun `should throw exception when source provider is not registered`() {
+        // Register only target provider
+        val targetProvider = createTestProvider()
+        registry.registerProvider(Int::class, targetProvider)
 
-        registry.registerTransformer(String::class, transformer)
-
-        // Should throw exception when normalizer is not registered
+        // Should throw exception when source provider is not registered
         try {
-            factory.createKolo(String::class, String::class)
+            factory.createKolo<String, String, String, String, Int, Int, Int, Int>(String::class, Int::class)
             assertThat(false).isTrue() // Should not reach here
         } catch (e: IllegalArgumentException) {
-            assertThat(e.message).contains("No normalizer found for source type")
+            assertThat(e.message).contains("No provider found for source type")
         }
     }
 
     @Test
-    fun `should throw exception when transformer is not registered`() {
-        val normalizer = object : Normalizer<String> {
-            override fun normalizeRequest(request: String): IntermittentRequest = IntermittentRequest(messages = emptyList(), model = "test")
-            override fun normalizeResponse(response: String): IntermittentResponse = IntermittentResponse(id = "test", model = "test", choices = emptyList())
-            override fun normalizeStreamingResponse(stream: kotlinx.coroutines.flow.Flow<String>): kotlinx.coroutines.flow.Flow<IntermittentStreamEvent> = kotlinx.coroutines.flow.flowOf()
-            override fun normalizeError(error: String): IntermittentError = IntermittentError("test", "test")
-        }
+    fun `should throw exception when target provider is not registered`() {
+        // Register only source provider
+        val sourceProvider = createTestProvider()
+        registry.registerProvider(String::class, sourceProvider)
 
-        registry.registerNormalizer(String::class, normalizer)
-
-        // Should throw exception when transformer is not registered
+        // Should throw exception when target provider is not registered
         try {
-            factory.createKolo(String::class, String::class)
+            factory.createKolo<String, String, String, String, Int, Int, Int, Int>(String::class, Int::class)
             assertThat(false).isTrue() // Should not reach here
         } catch (e: IllegalArgumentException) {
-            assertThat(e.message).contains("No transformer found for target type")
+            assertThat(e.message).contains("No provider found for target type")
         }
     }
 
     @Test
     fun `should check if conversion is possible`() {
-        val normalizer = object : Normalizer<String> {
-            override fun normalizeRequest(request: String): IntermittentRequest = IntermittentRequest(messages = emptyList(), model = "test")
-            override fun normalizeResponse(response: String): IntermittentResponse = IntermittentResponse(id = "test", model = "test", choices = emptyList())
-            override fun normalizeStreamingResponse(stream: kotlinx.coroutines.flow.Flow<String>): kotlinx.coroutines.flow.Flow<IntermittentStreamEvent> = kotlinx.coroutines.flow.flowOf()
-            override fun normalizeError(error: String): IntermittentError = IntermittentError("test", "test")
-        }
+        val provider1 = createTestProvider()
+        val provider2 = createTestProvider()
 
-        val transformer = object : Transformer<String, String, String> {
-            override fun transformRequest(request: IntermittentRequest): String = ""
-            override fun transformResponse(response: IntermittentResponse): String = ""
-            override fun transformError(error: IntermittentError): String = ""
-        }
-
-        registry.registerNormalizer(String::class, normalizer)
-        registry.registerTransformer(String::class, transformer)
+        registry.registerProvider(String::class, provider1)
+        registry.registerProvider(Int::class, provider2)
 
         assertThat(factory.canConvert(String::class, String::class)).isTrue()
-        assertThat(factory.canConvert(String::class, Int::class)).isFalse()
+        assertThat(factory.canConvert(String::class, Int::class)).isTrue()
+        assertThat(factory.canConvert(String::class, Double::class)).isFalse()
     }
 
     @Test
     fun `should get possible targets for a source type`() {
-        val normalizer = object : Normalizer<String> {
-            override fun normalizeRequest(request: String): IntermittentRequest = IntermittentRequest(messages = emptyList(), model = "test")
-            override fun normalizeResponse(response: String): IntermittentResponse = IntermittentResponse(id = "test", model = "test", choices = emptyList())
-            override fun normalizeStreamingResponse(stream: kotlinx.coroutines.flow.Flow<String>): kotlinx.coroutines.flow.Flow<IntermittentStreamEvent> = kotlinx.coroutines.flow.flowOf()
-            override fun normalizeError(error: String): IntermittentError = IntermittentError("test", "test")
-        }
+        val provider1 = createTestProvider()
+        val provider2 = createTestProvider()
 
-        val transformer1 = object : Transformer<String, String, String> {
-            override fun transformRequest(request: IntermittentRequest): String = ""
-            override fun transformResponse(response: IntermittentResponse): String = ""
-            override fun transformError(error: IntermittentError): String = ""
-        }
-
-        val transformer2 = object : Transformer<Int, Int, Int> {
-            override fun transformRequest(request: IntermittentRequest): Int = 0
-            override fun transformResponse(response: IntermittentResponse): Int = 0
-            override fun transformError(error: IntermittentError): Int = 0
-        }
-
-        registry.registerNormalizer(String::class, normalizer)
-        registry.registerTransformer(String::class, transformer1)
-        registry.registerTransformer(Int::class, transformer2)
+        registry.registerProvider(String::class, provider1)
+        registry.registerProvider(Int::class, provider2)
 
         val possibleTargets = factory.getPossibleTargets(String::class)
         assertThat(possibleTargets).containsExactlyInAnyOrder(String::class, Int::class)
+    }
+
+    private fun createTestProvider(): StreamingProvider<String, String, String, String> {
+        return object : StreamingProvider<String, String, String, String> {
+            override fun normalizeRequest(request: String): IntermittentRequest =
+                IntermittentRequest(messages = emptyList(), model = "test")
+            override fun transformRequest(request: IntermittentRequest): String = ""
+            override fun normalizeResponse(response: String): IntermittentResponse =
+                IntermittentResponse(id = "test", model = "test", choices = emptyList())
+            override fun transformResponse(response: IntermittentResponse): String = ""
+            override fun normalizeStreamingResponse(stream: Flow<String>): Flow<IntermittentStreamEvent> = flowOf()
+            override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<String> = flowOf()
+            override fun normalizeError(error: String): IntermittentError = IntermittentError("test", "test")
+            override fun transformError(error: IntermittentError): String = ""
+            override fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> = flowOf()
+            override fun processStreamingDataToStreamEvent(stream: Flow<IntermittentStreamEvent>): Flow<String> = flowOf()
+            override fun processRawStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<String> = flowOf()
+        }
     }
 }

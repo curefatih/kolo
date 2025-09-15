@@ -21,72 +21,28 @@ class KoloProviderTest {
     @Test
     fun `should create Kolo instance for OpenAI to Anthropic conversion`() {
         // When
-        val kolo = koloProvider.createKolo(OpenAIRequest::class, AnthropicRequest::class)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
 
         // Then
-        assertThat(kolo).isNotNull
+        assertThat(kolo).isNotNull()
         assertThat(kolo).isInstanceOf(Kolo::class.java)
     }
 
     @Test
     fun `should create Kolo instance for Anthropic to OpenAI conversion`() {
         // When
-        val kolo = koloProvider.createKolo(AnthropicRequest::class, OpenAIRequest::class)
+        val kolo = koloProvider.createKolo<AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError, OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError>(AnthropicRequest::class, OpenAIRequest::class)
 
         // Then
-        assertThat(kolo).isNotNull
+        assertThat(kolo).isNotNull()
         assertThat(kolo).isInstanceOf(Kolo::class.java)
-    }
-
-    @Test
-    fun `should create bidirectional Kolo instance`() {
-        // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo(
-            OpenAIRequest::class,
-            OpenAIResponse::class,
-            com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent::class,
-            AnthropicRequest::class,
-            AnthropicResponse::class,
-            com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent::class,
-        )
-
-        // Then
-        assertThat(bidirectionalKolo).isNotNull
-        assertThat(bidirectionalKolo).isInstanceOf(BidirectionalKolo::class.java)
-    }
-
-    @Test
-    fun `should create Kolo instance using reified types`() {
-        // When
-        val kolo = koloProvider.createKolo<OpenAIRequest, AnthropicRequest>()
-
-        // Then
-        assertThat(kolo).isNotNull
-        assertThat(kolo).isInstanceOf(Kolo::class.java)
-    }
-
-    @Test
-    fun `should create bidirectional Kolo instance using reified types`() {
-        // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent>()
-
-        // Then
-        assertThat(bidirectionalKolo).isNotNull
-        assertThat(bidirectionalKolo).isInstanceOf(BidirectionalKolo::class.java)
     }
 
     @Test
     fun `should check if conversion is possible`() {
         // When & Then
-        assertThat(koloProvider.canConvert(OpenAIRequest::class, AnthropicRequest::class)).isTrue
-        assertThat(koloProvider.canConvert(AnthropicRequest::class, OpenAIRequest::class)).isTrue
-    }
-
-    @Test
-    fun `should check if bidirectional conversion is possible`() {
-        // When & Then
-        assertThat(koloProvider.canConvertBidirectional(OpenAIRequest::class, AnthropicRequest::class)).isTrue
-        assertThat(koloProvider.canConvertBidirectional(AnthropicRequest::class, OpenAIRequest::class)).isTrue
+        assertThat(koloProvider.canConvert(OpenAIRequest::class, AnthropicRequest::class)).isTrue()
+        assertThat(koloProvider.canConvert(AnthropicRequest::class, OpenAIRequest::class)).isTrue()
     }
 
     @Test
@@ -113,7 +69,7 @@ class KoloProviderTest {
         val conversionPairs = koloProvider.getAllConversionPairs()
 
         // Then
-        assertThat(conversionPairs).isNotEmpty
+        assertThat(conversionPairs).isNotEmpty()
         assertThat(conversionPairs).contains(Pair(OpenAIRequest::class, AnthropicRequest::class))
         assertThat(conversionPairs).contains(Pair(AnthropicRequest::class, OpenAIRequest::class))
     }
@@ -121,6 +77,6 @@ class KoloProviderTest {
     @Test
     fun `should have factory instance`() {
         // When & Then
-        assertThat(koloProvider.factory).isNotNull
+        assertThat(koloProvider.factory).isNotNull()
     }
 }

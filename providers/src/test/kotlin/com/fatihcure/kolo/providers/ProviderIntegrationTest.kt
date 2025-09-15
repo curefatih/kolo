@@ -36,11 +36,11 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo(OpenAIRequest::class, AnthropicRequest::class)
-        val anthropicRequest = kolo.convertRequest(openAIRequest)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
+        val anthropicRequest = kolo.convertSourceRequestToTarget(openAIRequest)
 
         // Then
-        assertThat(anthropicRequest).isNotNull
+        assertThat(anthropicRequest).isNotNull()
         assertThat(anthropicRequest.model).isEqualTo("gpt-3.5-turbo")
         assertThat(anthropicRequest.messages).hasSize(1)
         assertThat(anthropicRequest.messages[0].content).isEqualTo("Hello, how are you?")
@@ -62,11 +62,11 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo(AnthropicRequest::class, OpenAIRequest::class)
-        val openAIRequest = kolo.convertRequest(anthropicRequest)
+        val kolo = koloProvider.createKolo<AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError, OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError>(AnthropicRequest::class, OpenAIRequest::class)
+        val openAIRequest = kolo.convertSourceRequestToTarget(anthropicRequest)
 
         // Then
-        assertThat(openAIRequest).isNotNull
+        assertThat(openAIRequest).isNotNull()
         assertThat(openAIRequest.model).isEqualTo("claude-3-sonnet-20240229")
         assertThat(openAIRequest.messages).hasSize(2) // system + user message
         assertThat(openAIRequest.messages[0].role).isEqualTo("system")
@@ -81,7 +81,7 @@ class ProviderIntegrationTest {
     // have limited response conversion functionality implemented
 
     @Test
-    fun `should work with bidirectional Kolo for request conversion`() {
+    fun `should work with Kolo for request conversion`() {
         // Given
         val openAIRequest = OpenAIRequest(
             model = "gpt-3.5-turbo",
@@ -92,36 +92,25 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val bidirectionalKolo = koloProvider.createBidirectionalKolo(
-            OpenAIRequest::class,
-            OpenAIResponse::class,
-            com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent::class,
-            AnthropicRequest::class,
-            AnthropicResponse::class,
-            com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent::class,
-        )
-        val anthropicRequest = bidirectionalKolo.convertRequest(openAIRequest)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
+        val anthropicRequest = kolo.convertSourceRequestToTarget(openAIRequest)
 
         // Then
-        assertThat(anthropicRequest).isNotNull
+        assertThat(anthropicRequest).isNotNull()
         assertThat(anthropicRequest.model).isEqualTo("gpt-3.5-turbo")
         assertThat(anthropicRequest.messages).hasSize(1)
         assertThat(anthropicRequest.messages[0].content).isEqualTo("Hello!")
         assertThat(anthropicRequest.temperature).isEqualTo(0.7)
-
-        // Note: convertResponse is not fully implemented in the current providers
-        // so we only test the request conversion which works
     }
 
     @Test
     fun `should verify provider registration works correctly`() {
         // When & Then
-        assertThat(koloProvider.canConvert(OpenAIRequest::class, AnthropicRequest::class)).isTrue
-        assertThat(koloProvider.canConvert(AnthropicRequest::class, OpenAIRequest::class)).isTrue
-        assertThat(koloProvider.canConvertBidirectional(OpenAIRequest::class, AnthropicRequest::class)).isTrue
+        assertThat(koloProvider.canConvert(OpenAIRequest::class, AnthropicRequest::class)).isTrue()
+        assertThat(koloProvider.canConvert(AnthropicRequest::class, OpenAIRequest::class)).isTrue()
 
         val conversionPairs = koloProvider.getAllConversionPairs()
-        assertThat(conversionPairs).isNotEmpty
+        assertThat(conversionPairs).isNotEmpty()
         assertThat(conversionPairs).contains(Pair(OpenAIRequest::class, AnthropicRequest::class))
         assertThat(conversionPairs).contains(Pair(AnthropicRequest::class, OpenAIRequest::class))
     }
@@ -145,11 +134,11 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo(OpenAIRequest::class, AnthropicRequest::class)
-        val anthropicRequest = kolo.convertRequest(openAIRequest)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
+        val anthropicRequest = kolo.convertSourceRequestToTarget(openAIRequest)
 
         // Then
-        assertThat(anthropicRequest).isNotNull
+        assertThat(anthropicRequest).isNotNull()
         assertThat(anthropicRequest.model).isEqualTo("gpt-4")
         assertThat(anthropicRequest.messages).hasSize(1) // Only user message, system goes to system field
         assertThat(anthropicRequest.system).isEqualTo("You are a helpful assistant")
@@ -158,6 +147,6 @@ class ProviderIntegrationTest {
         assertThat(anthropicRequest.maxTokens).isEqualTo(500)
         assertThat(anthropicRequest.topP).isEqualTo(0.9)
         assertThat(anthropicRequest.stop).containsExactly("STOP", "END")
-        assertThat(anthropicRequest.stream).isFalse
+        assertThat(anthropicRequest.stream).isFalse()
     }
 }
