@@ -39,9 +39,16 @@ Complete guide on how to use the Kolo library, including:
 
 3. **Bidirectional Conversion**
    ```kotlin
-   val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, AnthropicRequest>()
+   val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, AnthropicRequest, AnthropicResponse, OpenAIStreamEvent, AnthropicStreamEvent>()
    val converted = bidirectionalKolo.convertRequest(openAIRequest)
    val backToOriginal = bidirectionalKolo.convertResponse(anthropicResponse)
+   ```
+
+4. **Streaming Conversion**
+   ```kotlin
+   val anthropicStream: Flow<AnthropicStreamEvent> = /* your stream */
+   val openAIStream: Flow<OpenAIStreamEvent> = bidirectionalKolo.convertStreamingResponse(anthropicStream)
+   openAIStream.collect { event -> /* process converted events */ }
    ```
 
 ## Key Features
@@ -81,6 +88,13 @@ graph TD
     J --> K["Transformer<br/>(IF → OpenAI)"]
     K --> L["OpenAI-format response"]
     L --> A
+    
+    G --> M["Anthropic streaming response"]
+    M --> N["Streaming Normalizer<br/>(Anthropic → IF)"]
+    N --> O["Intermittent Stream Events"]
+    O --> P["Streaming Transformer<br/>(IF → OpenAI)"]
+    P --> Q["OpenAI streaming response"]
+    Q --> A
 ```
 
 This approach reduces complexity from O(N²) to O(N) conversions.
