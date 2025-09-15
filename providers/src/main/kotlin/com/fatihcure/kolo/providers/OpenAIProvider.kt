@@ -7,6 +7,7 @@ import com.fatihcure.kolo.core.IntermittentRequest
 import com.fatihcure.kolo.core.IntermittentResponse
 import com.fatihcure.kolo.core.IntermittentStreamEvent
 import com.fatihcure.kolo.core.Provider
+import com.fatihcure.kolo.core.StreamingProvider
 import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAINormalizer
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
@@ -16,6 +17,11 @@ import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
 import com.fatihcure.kolo.normalizers.openai.createOpenAIStreamingHandler
 import com.fatihcure.kolo.transformers.openai.OpenAITransformer
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * OpenAI provider implementation that combines normalizer and transformer
@@ -23,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 @AutoRegisterProvider(OpenAIRequest::class, OpenAIResponse::class)
 class OpenAIProvider(
     private val config: OpenAIProviderConfig = OpenAIProviderConfig.default(),
-) : Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> {
+) : StreamingProvider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> {
 
     private val normalizer = OpenAINormalizer()
     private val transformer = OpenAITransformer()
@@ -71,9 +77,21 @@ class OpenAIProvider(
      * @param rawStream Flow of raw string data from the streaming response
      * @return Flow of IntermittentStreamEvent objects
      */
-    fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
+    override fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
         val streamingResponses = streamingHandler.processStreamingData(rawStream)
         return normalizer.normalizeStreamingResponse(streamingResponses)
+    }
+
+    /**
+     * Process raw streaming data and convert to Flow<OpenAIStreamEvent>
+     * This method handles the actual streaming data processing with buffering
+     * @param rawStream Flow of raw string data from the streaming response
+     * @return Flow of OpenAIStreamEvent objects
+     */
+    override fun processStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<OpenAIStreamEvent> {
+        val streamingResponses = streamingHandler.processStreamingData(rawStream)
+        val intermittentStream = normalizer.normalizeStreamingResponse(streamingResponses)
+        return transformer.transformStreamingResponse(intermittentStream)
     }
 
     /**
@@ -84,6 +102,60 @@ class OpenAIProvider(
      */
     fun processStreamingDataToStreamingResponse(rawStream: Flow<String>): Flow<OpenAIStreamingResponse> {
         return streamingHandler.processStreamingData(rawStream)
+    }
+
+    /**
+     * Process raw HTTP response stream and convert to Flow<IntermittentStreamEvent>
+     * This method handles the complete HTTP response processing including SSE parsing, filtering, and conversion
+     * @param httpResponseStream Flow of raw HTTP response chunks
+     * @return Flow of IntermittentStreamEvent objects
+     */
+    override fun processHttpResponseStream(httpResponseStream: Flow<String>): Flow<IntermittentStreamEvent> {
+        val processedStream = processHttpResponseStreamInternal(httpResponseStream)
+        return processStreamingData(processedStream)
+    }
+
+    /**
+     * Process raw HTTP response stream and convert to Flow<OpenAIStreamEvent>
+     * This method handles the complete HTTP response processing including SSE parsing, filtering, and conversion
+     * @param httpResponseStream Flow of raw HTTP response chunks
+     * @return Flow of OpenAIStreamEvent objects
+     */
+    override fun processHttpResponseStreamToStreamEvent(httpResponseStream: Flow<String>): Flow<OpenAIStreamEvent> {
+        val processedStream = processHttpResponseStreamInternal(httpResponseStream)
+        return processStreamingDataToStreamEvent(processedStream)
+    }
+
+    /**
+     * Internal method to process raw HTTP response stream
+     * Handles SSE parsing, filtering, and basic cleanup
+     * @param httpResponseStream Flow of raw HTTP response chunks
+     * @return Flow of cleaned string data ready for streaming processing
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun processHttpResponseStreamInternal(httpResponseStream: Flow<String>): Flow<String> {
+        return httpResponseStream
+            .flatMapConcat { chunk ->
+                // Split by newlines and return all lines
+                flowOf(*chunk.split("\n").toTypedArray())
+            }
+            .filter { it.isNotEmpty() } // filter out empty lines
+            .filter { line ->
+                // Handle both SSE format (data: prefix) and raw JSON format
+                when {
+                    line.startsWith("data: ") -> !line.contains("[DONE]")
+                    line.startsWith("{") && line.endsWith("}") -> true // raw JSON
+                    else -> false
+                }
+            }
+            .map { line ->
+                // Remove SSE prefix if present, otherwise return as-is
+                if (line.startsWith("data: ")) {
+                    line.removePrefix("data: ")
+                } else {
+                    line
+                }
+            }
     }
 
     // Error handling

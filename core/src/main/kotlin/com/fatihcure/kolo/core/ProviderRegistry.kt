@@ -144,6 +144,18 @@ class ProviderRegistry {
     fun getCombinedTransformerTypes(): Set<KClass<*>> {
         return combinedTransformers.keys.toSet()
     }
+
+    /**
+     * Get all registered providers (normalizers, transformers, streaming transformers, combined transformers)
+     */
+    fun getAllProviders(): List<Any> {
+        val allProviders = mutableListOf<Any>()
+        allProviders.addAll(normalizers.values)
+        allProviders.addAll(transformers.values)
+        allProviders.addAll(streamingTransformers.values)
+        allProviders.addAll(combinedTransformers.values)
+        return allProviders
+    }
 }
 
 /**
@@ -208,5 +220,9 @@ object GlobalProviderRegistry {
 
     fun getStreamingTransformerTypes(): Set<KClass<*>> {
         return registry.getStreamingTransformerTypes()
+    }
+
+    fun getAllProviders(): List<Any> {
+        return registry.getAllProviders()
     }
 }

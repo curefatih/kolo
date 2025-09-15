@@ -59,6 +59,46 @@ interface Provider<RequestType, ResponseType, StreamEventType, ErrorType> {
 }
 
 /**
+ * Enhanced provider interface that includes raw streaming data processing capabilities
+ * This interface extends the base Provider interface with methods to handle raw streaming data
+ * from HTTP responses (like Server-Sent Events) and convert them to the appropriate format
+ */
+interface StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType> : Provider<RequestType, ResponseType, StreamEventType, ErrorType> {
+    
+    /**
+     * Process raw streaming data (e.g., from HTTP SSE response) and convert to Flow<IntermittentStreamEvent>
+     * This method handles the actual streaming data processing with buffering and parsing
+     * @param rawStream Flow of raw string data from the streaming response
+     * @return Flow of IntermittentStreamEvent objects
+     */
+    fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent>
+    
+    /**
+     * Process raw streaming data and convert to Flow<StreamEventType>
+     * This method handles the actual streaming data processing with buffering and parsing
+     * @param rawStream Flow of raw string data from the streaming response
+     * @return Flow of StreamEventType objects
+     */
+    fun processStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<StreamEventType>
+    
+    /**
+     * Process raw HTTP response stream and convert to Flow<IntermittentStreamEvent>
+     * This method handles the complete HTTP response processing including SSE parsing, filtering, and conversion
+     * @param httpResponseStream Flow of raw HTTP response chunks
+     * @return Flow of IntermittentStreamEvent objects
+     */
+    fun processHttpResponseStream(httpResponseStream: Flow<String>): Flow<IntermittentStreamEvent>
+    
+    /**
+     * Process raw HTTP response stream and convert to Flow<StreamEventType>
+     * This method handles the complete HTTP response processing including SSE parsing, filtering, and conversion
+     * @param httpResponseStream Flow of raw HTTP response chunks
+     * @return Flow of StreamEventType objects
+     */
+    fun processHttpResponseStreamToStreamEvent(httpResponseStream: Flow<String>): Flow<StreamEventType>
+}
+
+/**
  * Provider auto-registration system that can automatically discover and register providers
  */
 class ProviderAutoRegistration(private val registry: ProviderRegistry) {
@@ -185,7 +225,7 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
      * Auto-register all providers from a package
      * This would typically use reflection to scan for annotated classes
      */
-    fun autoRegisterFromPackage(packageName: String) {
+    fun autoRegisterFromPackage(@Suppress("UNUSED_PARAMETER") packageName: String) {
         // This is a simplified version - in a real implementation,
         // you would use reflection to scan for annotated classes
         // and instantiate them automatically
