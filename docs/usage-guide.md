@@ -108,7 +108,13 @@ class StreamingService {
             .uri("/v1/messages")
             .bodyValue(targetRequest)
             .retrieve()
-            .bodyToFlux(String::class.java)
+            .bodyToFlux(DataBuffer::class.java)
+            .map { buffer ->
+                val bytes = ByteArray(buffer.readableByteCount())
+                buffer.read(bytes)
+                buffer.release()
+                String(bytes, StandardCharsets.UTF_8)
+            }
             .asFlow() // Convert to Kotlin Flow
         
         // Use Kolo to process streaming data
@@ -206,7 +212,13 @@ val rawStream = webClient
     .uri("/api/endpoint")
     .bodyValue(request)
     .retrieve()
-    .bodyToFlux(String::class.java)
+    .bodyToFlux(DataBuffer::class.java)
+    .map { buffer ->
+        val bytes = ByteArray(buffer.readableByteCount())
+        buffer.read(bytes)
+        buffer.release()
+        String(bytes, StandardCharsets.UTF_8)
+    }
     .asFlow()
 
 // Use Kolo to process the streaming data
