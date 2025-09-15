@@ -98,13 +98,13 @@ class ProviderAutoRegistration(private val registry: ProviderRegistry) {
     constructor() : this(GlobalProviderRegistry.registry)
 
     /**
-     * Register a streaming provider with explicit type
+     * Register a streaming provider by its provider class
      */
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
-        type: KClass<*>,
+        providerClass: KClass<*>,
         provider: StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>,
     ) {
-        registry.registerProvider(type, provider)
+        registry.registerProvider(providerClass, provider)
     }
 
     /**
@@ -127,10 +127,10 @@ object GlobalProviderAutoRegistration {
     private val autoRegistration = ProviderAutoRegistration()
 
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
-        type: KClass<*>,
+        providerClass: KClass<*>,
         provider: StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>,
     ) {
-        autoRegistration.registerProvider(type, provider)
+        autoRegistration.registerProvider(providerClass, provider)
     }
 
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProviders(

@@ -3,36 +3,36 @@ package com.fatihcure.kolo.core
 import kotlin.reflect.KClass
 
 /**
- * Registry for managing streaming providers by type
+ * Registry for managing streaming providers by provider class
  */
 class ProviderRegistry {
     private val providers = mutableMapOf<KClass<*>, StreamingProvider<*, *, *, *>>()
 
     /**
-     * Register a streaming provider for a specific type
+     * Register a streaming provider by its provider class
      */
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
-        type: KClass<*>,
+        providerClass: KClass<*>,
         provider: StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>,
     ) {
-        providers[type] = provider
+        providers[providerClass] = provider
     }
 
     /**
-     * Get a streaming provider for a specific type
+     * Get a streaming provider for a specific provider class
      */
     @Suppress("UNCHECKED_CAST")
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> getProvider(
-        type: KClass<*>,
+        providerClass: KClass<*>,
     ): StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>? {
-        return providers[type] as? StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>
+        return providers[providerClass] as? StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>
     }
 
     /**
-     * Check if a provider exists for a specific type
+     * Check if a provider exists for a specific provider class
      */
-    fun hasProvider(type: KClass<*>): Boolean {
-        return providers.containsKey(type)
+    fun hasProvider(providerClass: KClass<*>): Boolean {
+        return providers.containsKey(providerClass)
     }
 
     /**
@@ -57,20 +57,20 @@ object GlobalProviderRegistry {
     val registry = ProviderRegistry()
 
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> registerProvider(
-        type: KClass<*>,
+        providerClass: KClass<*>,
         provider: StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>,
     ) {
-        registry.registerProvider(type, provider)
+        registry.registerProvider(providerClass, provider)
     }
 
     fun <RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> getProvider(
-        type: KClass<*>,
+        providerClass: KClass<*>,
     ): StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType>? {
-        return registry.getProvider(type)
+        return registry.getProvider(providerClass)
     }
 
-    fun hasProvider(type: KClass<*>): Boolean {
-        return registry.hasProvider(type)
+    fun hasProvider(providerClass: KClass<*>): Boolean {
+        return registry.hasProvider(providerClass)
     }
 
     fun getProviderTypes(): Set<KClass<*>> {

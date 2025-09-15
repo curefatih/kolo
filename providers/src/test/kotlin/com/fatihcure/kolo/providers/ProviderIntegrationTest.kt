@@ -36,7 +36,7 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIProvider::class, AnthropicProvider::class)
         val anthropicRequest = kolo.convertSourceRequestToTarget(openAIRequest)
 
         // Then
@@ -62,7 +62,7 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo<AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError, OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError>(AnthropicRequest::class, OpenAIRequest::class)
+        val kolo = koloProvider.createKolo<AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError, OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError>(AnthropicProvider::class, OpenAIProvider::class)
         val openAIRequest = kolo.convertSourceRequestToTarget(anthropicRequest)
 
         // Then
@@ -92,7 +92,7 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIProvider::class, AnthropicProvider::class)
         val anthropicRequest = kolo.convertSourceRequestToTarget(openAIRequest)
 
         // Then
@@ -106,13 +106,13 @@ class ProviderIntegrationTest {
     @Test
     fun `should verify provider registration works correctly`() {
         // When & Then
-        assertThat(koloProvider.canConvert(OpenAIRequest::class, AnthropicRequest::class)).isTrue()
-        assertThat(koloProvider.canConvert(AnthropicRequest::class, OpenAIRequest::class)).isTrue()
+        assertThat(koloProvider.canConvert(OpenAIProvider::class, AnthropicProvider::class)).isTrue()
+        assertThat(koloProvider.canConvert(AnthropicProvider::class, OpenAIProvider::class)).isTrue()
 
         val conversionPairs = koloProvider.getAllConversionPairs()
         assertThat(conversionPairs).isNotEmpty()
-        assertThat(conversionPairs).contains(Pair(OpenAIRequest::class, AnthropicRequest::class))
-        assertThat(conversionPairs).contains(Pair(AnthropicRequest::class, OpenAIRequest::class))
+        assertThat(conversionPairs).contains(Pair(OpenAIProvider::class, AnthropicProvider::class))
+        assertThat(conversionPairs).contains(Pair(AnthropicProvider::class, OpenAIProvider::class))
     }
 
     @Test
@@ -134,7 +134,7 @@ class ProviderIntegrationTest {
         )
 
         // When
-        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIRequest::class, AnthropicRequest::class)
+        val kolo = koloProvider.createKolo<OpenAIRequest, OpenAIResponse, com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent, com.fatihcure.kolo.normalizers.openai.OpenAIError, AnthropicRequest, AnthropicResponse, com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent, com.fatihcure.kolo.normalizers.anthropic.AnthropicError>(OpenAIProvider::class, AnthropicProvider::class)
         val anthropicRequest = kolo.convertSourceRequestToTarget(openAIRequest)
 
         // Then

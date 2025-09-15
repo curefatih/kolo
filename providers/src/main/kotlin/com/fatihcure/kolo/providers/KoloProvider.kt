@@ -3,8 +3,6 @@ package com.fatihcure.kolo.providers
 import com.fatihcure.kolo.core.GlobalProviderAutoRegistration
 import com.fatihcure.kolo.core.GlobalProviderFactory
 import com.fatihcure.kolo.core.Kolo
-import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
-import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import kotlin.reflect.KClass
 
 /**
@@ -26,14 +24,14 @@ class KoloProvider {
     private fun registerProviders() {
         val openAIProvider = OpenAIProvider(config = OpenAIProviderConfig.default())
         GlobalProviderAutoRegistration.registerProvider(
-            OpenAIRequest::class,
+            OpenAIProvider::class,
             openAIProvider,
         )
 
         // Register Anthropic provider
         val anthropicProvider = AnthropicProvider()
         GlobalProviderAutoRegistration.registerProvider(
-            AnthropicRequest::class,
+            AnthropicProvider::class,
             anthropicProvider,
         )
     }
