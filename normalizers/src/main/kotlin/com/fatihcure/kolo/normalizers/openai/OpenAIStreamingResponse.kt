@@ -1,11 +1,15 @@
 package com.fatihcure.kolo.normalizers.openai
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * OpenAI streaming response format - matches the actual streaming API response
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class OpenAIStreamingResponse @JsonCreator constructor(
     @JsonProperty("id") val id: String? = null,
     @JsonProperty("object") val objectType: String? = null,
@@ -22,6 +26,7 @@ data class OpenAIStreamingResponse @JsonCreator constructor(
 /**
  * Choice in streaming response
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class OpenAIStreamingChoice @JsonCreator constructor(
     @JsonProperty("index") val index: Int,
     @JsonProperty("delta") val delta: OpenAIStreamingDelta? = null,
@@ -32,6 +37,7 @@ data class OpenAIStreamingChoice @JsonCreator constructor(
 /**
  * Delta in streaming response
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class OpenAIStreamingDelta @JsonCreator constructor(
     @JsonProperty("role") val role: String? = null,
     @JsonProperty("content") val content: String? = null,
