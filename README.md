@@ -53,22 +53,6 @@ With this approach, the number of conversions drops from _N × (N-1)_ to just _2
 
 - **[Usage Guide](docs/usage-guide.md)** - Step-by-step instructions and examples
 
-### Quick Start
-
-```kotlin
-// Add dependencies
-dependencies {
-    implementation("com.fatihcure.kolo:providers:1.4.0")
-    implementation("com.fatihcure.kolo:normalizers:1.4.0")
-    implementation("com.fatihcure.kolo:transformers:1.4.0")
-}
-
-// Basic usage
-val provider = KoloProvider()
-val kolo = provider.createKolo<OpenAIRequest, AnthropicRequest>()
-val converted = kolo.convertRequest(openAIRequest)
-```
-
 ---
 
 ### Key Features

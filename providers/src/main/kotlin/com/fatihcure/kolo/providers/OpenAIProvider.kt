@@ -1,12 +1,11 @@
 package com.fatihcure.kolo.providers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fatihcure.kolo.core.AutoRegisterProvider
 import com.fatihcure.kolo.core.IntermittentError
 import com.fatihcure.kolo.core.IntermittentRequest
 import com.fatihcure.kolo.core.IntermittentResponse
 import com.fatihcure.kolo.core.IntermittentStreamEvent
-import com.fatihcure.kolo.core.Provider
+import com.fatihcure.kolo.core.StreamingProvider
 import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAINormalizer
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
@@ -23,22 +22,12 @@ import kotlinx.coroutines.flow.Flow
 @AutoRegisterProvider(OpenAIRequest::class, OpenAIResponse::class)
 class OpenAIProvider(
     private val config: OpenAIProviderConfig = OpenAIProviderConfig.default(),
-) : Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> {
+) : StreamingProvider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> {
 
     private val normalizer = OpenAINormalizer()
     private val transformer = OpenAITransformer()
     private val streamingHandler = createOpenAIStreamingHandler(config.objectMapper, config.dataBufferFactory)
 
-    /**
-     * Constructor for backward compatibility
-     */
-    constructor(
-        objectMapper: ObjectMapper = ObjectMapper(),
-    ) : this(
-        config = OpenAIProviderConfig.withObjectMapper(objectMapper),
-    )
-
-    // Request normalization and transformation
     override fun normalizeRequest(request: OpenAIRequest): IntermittentRequest {
         return normalizer.normalizeRequest(request)
     }
@@ -47,7 +36,6 @@ class OpenAIProvider(
         return transformer.transformRequest(request)
     }
 
-    // Response normalization and transformation
     override fun normalizeResponse(response: OpenAIResponse): IntermittentResponse {
         return normalizer.normalizeResponse(response)
     }
@@ -56,7 +44,6 @@ class OpenAIProvider(
         return transformer.transformResponse(response)
     }
 
-    // Streaming support
     override fun normalizeStreamingResponse(stream: Flow<OpenAIStreamEvent>): Flow<IntermittentStreamEvent> {
         return normalizer.normalizeStreamEvent(stream)
     }
@@ -71,9 +58,25 @@ class OpenAIProvider(
      * @param rawStream Flow of raw string data from the streaming response
      * @return Flow of IntermittentStreamEvent objects
      */
-    fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
+    override fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
         val streamingResponses = streamingHandler.processStreamingData(rawStream)
         return normalizer.normalizeStreamingResponse(streamingResponses)
+    }
+
+    override fun processStreamingDataToStreamEvent(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamEvent> {
+        return transformer.transformStreamingResponse(stream)
+    }
+
+    /**
+     * Process raw streaming data and convert to Flow<OpenAIStreamEvent>
+     * This method handles the actual streaming data processing with buffering
+     * @param rawStream Flow of raw string data from the streaming response
+     * @return Flow of OpenAIStreamEvent objects
+     */
+    override fun processRawStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<OpenAIStreamEvent> {
+        val streamingResponses = streamingHandler.processStreamingData(rawStream)
+        val intermittentStream = normalizer.normalizeStreamingResponse(streamingResponses)
+        return transformer.transformStreamingResponse(intermittentStream)
     }
 
     /**
