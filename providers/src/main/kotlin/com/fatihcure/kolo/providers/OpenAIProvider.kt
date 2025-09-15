@@ -48,8 +48,6 @@ class OpenAIProvider(
         return normalizer.normalizeStreamEvent(stream)
     }
 
-
-
     override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamEvent> {
         return transformer.transformStreamingResponse(stream)
     }
@@ -75,7 +73,7 @@ class OpenAIProvider(
      * @param rawStream Flow of raw string data from the streaming response
      * @return Flow of OpenAIStreamEvent objects
      */
-    override fun processStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<OpenAIStreamEvent> {
+    override fun processRawStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<OpenAIStreamEvent> {
         val streamingResponses = streamingHandler.processStreamingData(rawStream)
         val intermittentStream = normalizer.normalizeStreamingResponse(streamingResponses)
         return transformer.transformStreamingResponse(intermittentStream)

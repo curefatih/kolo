@@ -70,9 +70,9 @@ class AnthropicProvider : StreamingProvider<AnthropicRequest, AnthropicResponse,
         return transformer.transformStreamingResponse(stream)
     }
 
-    override fun processStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<AnthropicStreamEvent> {
+    override fun processRawStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<AnthropicStreamEvent> {
         // This would need to be implemented based on the specific streaming format
         // For now, we'll throw an error indicating it needs implementation
-        throw NotImplementedError("processStreamingDataToStreamEvent needs to be implemented for Anthropic streaming format")
+        throw NotImplementedError("processRawStreamingDataToStreamEvent needs to be implemented for Anthropic streaming format")
     }
 }

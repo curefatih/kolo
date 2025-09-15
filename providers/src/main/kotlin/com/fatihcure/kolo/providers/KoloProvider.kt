@@ -3,13 +3,8 @@ package com.fatihcure.kolo.providers
 import com.fatihcure.kolo.core.GlobalProviderAutoRegistration
 import com.fatihcure.kolo.core.GlobalProviderFactory
 import com.fatihcure.kolo.core.Kolo
-import com.fatihcure.kolo.core.StreamingProvider
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
-import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse
-import com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent
-import com.fatihcure.kolo.normalizers.anthropic.AnthropicError
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
-import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
 import kotlin.reflect.KClass
 
 /**
@@ -52,7 +47,6 @@ class KoloProvider {
     ): Kolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType> {
         return factory.createKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>(sourceProviderType, targetProviderType)
     }
-
 
     /**
      * Check if a conversion is possible from source to target
