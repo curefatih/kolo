@@ -57,8 +57,26 @@ class Kolo<
         return convertTargetResponseToSource(sourceResponse)
     }
 
-    fun processSourceStreamingToTargetStreaming(rawStream: Flow<String>): Flow<TargetStreamingResponseType> {
-        return sourceProvider.processStreamingData(rawStream)
-            .let { targetProvider.processStreamingDataToStreamEvent(it) }
+    /**
+     * Process raw streaming data and convert to source streaming format
+     */
+    fun processRawStreamingToSourceStreaming(rawStream: Flow<String>): Flow<SourceStreamingResponseType> {
+        return sourceProvider.processRawStreamingDataToStreamEvent(rawStream)
+    }
+
+    /**
+     * Process raw streaming data and convert to target streaming format
+     */
+    fun processRawStreamingToTargetStreaming(rawStream: Flow<String>): Flow<TargetStreamingResponseType> {
+        return targetProvider.processRawStreamingDataToStreamEvent(rawStream)
+    }
+
+    /**
+     * Process raw streaming data through the full conversion pipeline
+     * Source raw stream -> Intermittent -> Target streaming format
+     */
+    fun processRawStreamingThroughConversion(rawStream: Flow<String>): Flow<TargetStreamingResponseType> {
+        val intermittentStream = sourceProvider.processStreamingData(rawStream)
+        return targetProvider.processStreamingDataToStreamEvent(intermittentStream)
     }
 }
