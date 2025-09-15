@@ -9,6 +9,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
+@Repeatable
 annotation class AutoRegisterNormalizer(val type: KClass<*>)
 
 /**
@@ -16,6 +17,7 @@ annotation class AutoRegisterNormalizer(val type: KClass<*>)
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
+@Repeatable
 annotation class AutoRegisterTransformer(val type: KClass<*>)
 
 /**
@@ -23,6 +25,7 @@ annotation class AutoRegisterTransformer(val type: KClass<*>)
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
+@Repeatable
 annotation class AutoRegisterStreamingTransformer(val type: KClass<*>)
 
 /**

@@ -80,22 +80,24 @@ fun basicExample() {
 
 ## Bidirectional Conversion
 
-For applications that need to convert in both directions, use the bidirectional Kolo instance. The new API requires 4 type parameters to properly handle both request and response conversions:
+For applications that need to convert in both directions, use the bidirectional Kolo instance. The new API requires 6 type parameters to properly handle both request and response conversions, including separate types for streaming responses:
 
 - `SourceRequestType`: The source provider's request type (e.g., `OpenAIRequest`)
 - `SourceResponseType`: The source provider's response type (e.g., `OpenAIResponse`) 
+- `SourceStreamingResponseType`: The source provider's streaming event type (e.g., `OpenAIStreamEvent`)
 - `TargetRequestType`: The target provider's request type (e.g., `AnthropicRequest`)
 - `TargetResponseType`: The target provider's response type (e.g., `AnthropicResponse`)
+- `TargetStreamingResponseType`: The target provider's streaming response type (e.g., `AnthropicStreamEvent`)
 
-This design allows for proper type safety when converting between different provider formats in both directions.
+This design allows for proper type safety when converting between different provider formats in both directions, with distinct types for regular and streaming responses.
 
 ```kotlin
 fun bidirectionalExample() {
     val provider = KoloProvider()
 
-    // Create a bidirectional Kolo instance with 4 type parameters:
-    // SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType
-    val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, AnthropicRequest, AnthropicResponse>()
+    // Create a bidirectional Kolo instance with 6 type parameters:
+    // SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType
+    val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, AnthropicRequest, AnthropicResponse, AnthropicStreamEvent>()
 
     // Create an OpenAI-style request
     val openAIRequest = OpenAIRequest(
@@ -189,7 +191,7 @@ import kotlinx.coroutines.runBlocking
 
 fun streamingExample() = runBlocking {
     val provider = KoloProvider()
-    val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, AnthropicRequest, AnthropicResponse>()
+    val bidirectionalKolo = provider.createBidirectionalKolo<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, AnthropicRequest, AnthropicResponse, AnthropicStreamEvent>()
 
     // Simulate a streaming response from Anthropic
     val anthropicStream: Flow<AnthropicStreamEvent> = flowOf(
@@ -222,15 +224,19 @@ fun streamingWithBuilderExample() = runBlocking {
     val targetNormalizer = /* your target normalizer */
     val sourceTransformer = /* your source transformer */
     val targetTransformer = /* your target transformer */
+    val sourceStreamingNormalizer = /* your source streaming normalizer */
     val sourceStreamingTransformer = /* your source streaming transformer */
+    val targetStreamingNormalizer = /* your target streaming normalizer */
     val targetStreamingTransformer = /* your target streaming transformer */
 
-    val bidirectionalKolo = bidirectionalKoloBuilder<String, String, String, String>()
+    val bidirectionalKolo = bidirectionalKoloBuilder<String, String, String, String, String, String>()
         .withSourceNormalizer(sourceNormalizer)
         .withTargetNormalizer(targetNormalizer)
         .withSourceTransformer(sourceTransformer)
         .withTargetTransformer(targetTransformer)
+        .withSourceStreamingNormalizer(sourceStreamingNormalizer)
         .withSourceStreamingTransformer(sourceStreamingTransformer)
+        .withTargetStreamingNormalizer(targetStreamingNormalizer)
         .withTargetStreamingTransformer(targetStreamingTransformer)
         .build()
 
@@ -246,11 +252,11 @@ fun streamingWithBuilderExample() = runBlocking {
 
 ### Streaming Requirements
 
-For streaming conversion to work, both source and target streaming transformers must be available:
+For streaming conversion to work, both source and target streaming normalizers and transformers must be available:
 
-- **Automatic Detection**: When using `KoloProvider.createBidirectionalKolo()`, streaming transformers are automatically detected if available
-- **Manual Configuration**: When using the builder pattern, you must explicitly provide streaming transformers
-- **Error Handling**: If streaming transformers are missing, `convertStreamingResponse()` will throw an `IllegalArgumentException` with a clear error message
+- **Automatic Detection**: When using `KoloProvider.createBidirectionalKolo()`, streaming normalizers and transformers are automatically detected if available
+- **Manual Configuration**: When using the builder pattern, you must explicitly provide streaming normalizers and transformers
+- **Error Handling**: If streaming normalizers or transformers are missing, `convertStreamingResponse()` will throw an `IllegalArgumentException` with a clear error message
 
 ### JSON Streaming Support
 

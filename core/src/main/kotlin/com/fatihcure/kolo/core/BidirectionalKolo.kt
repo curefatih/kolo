@@ -15,16 +15,20 @@ import kotlinx.coroutines.flow.map
  *
  * @param SourceRequestType The source provider's request type (e.g., OpenAIRequest)
  * @param SourceResponseType The source provider's response type (e.g., OpenAIResponse)
+ * @param SourceStreamingResponseType The source provider's streaming response type (e.g., OpenAIStreamingResponse)
  * @param TargetRequestType The target provider's request type (e.g., AnthropicRequest)
  * @param TargetResponseType The target provider's response type (e.g., AnthropicResponse)
+ * @param TargetStreamingResponseType The target provider's streaming response type (e.g., AnthropicStreamEvent)
  */
-class BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType>(
+class BidirectionalKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, TargetRequestType, TargetResponseType, TargetStreamingResponseType>(
     private val sourceNormalizer: Normalizer<SourceRequestType>,
     private val sourceTransformer: Transformer<SourceRequestType, SourceResponseType, SourceResponseType>,
+    private val sourceStreamingNormalizer: Normalizer<SourceStreamingResponseType>,
+    private val sourceStreamingTransformer: StreamingTransformer<SourceStreamingResponseType>,
     private val targetNormalizer: Normalizer<TargetResponseType>,
     private val targetTransformer: Transformer<TargetRequestType, TargetResponseType, TargetResponseType>,
-    private val sourceStreamingTransformer: StreamingTransformer<SourceResponseType>? = null,
-    private val targetStreamingTransformer: StreamingTransformer<TargetResponseType>? = null,
+    private val targetStreamingNormalizer: Normalizer<TargetStreamingResponseType>,
+    private val targetStreamingTransformer: StreamingTransformer<TargetStreamingResponseType>,
 ) {
     companion object {
         val objectMapper = com.fasterxml.jackson.databind.ObjectMapper().registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
@@ -58,21 +62,13 @@ class BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType
      *
      * @param targetStream the streaming response from target format
      * @return the converted streaming response in source format
-     * @throws UnsupportedOperationException if streaming transformers are not available
      */
-    fun convertStreamingResponse(targetStream: Flow<TargetResponseType>): Flow<SourceResponseType> {
-        requireNotNull(targetStreamingTransformer) {
-            "Target streaming transformer is required for streaming conversion"
-        }
-        requireNotNull(sourceStreamingTransformer) {
-            "Source streaming transformer is required for streaming conversion"
-        }
-
+    fun convertStreamingResponse(targetStream: Flow<TargetStreamingResponseType>): Flow<SourceStreamingResponseType> {
         return targetStream
             .flowOn(Dispatchers.IO)
             .buffer()
             .let { stream ->
-                val intermittentStream = targetNormalizer.normalizeStreamingResponse(stream)
+                val intermittentStream = targetStreamingNormalizer.normalizeStreamingResponse(stream)
 
                 sourceStreamingTransformer.transformStreamingResponse(intermittentStream)
                     .flowOn(Dispatchers.Default)
@@ -123,7 +119,7 @@ class BidirectionalKolo<SourceRequestType, SourceResponseType, TargetRequestType
     /**
      * Converts a streaming response from target format to JSON string
      */
-    fun convertStreamingResponseToJson(targetStream: Flow<TargetResponseType>): Flow<String> {
+    fun convertStreamingResponseToJson(targetStream: Flow<TargetStreamingResponseType>): Flow<String> {
         return targetStream.map { response ->
             objectMapper.writeValueAsString(response)
         }

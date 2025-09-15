@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.normalizers.openai
 
+import com.fatihcure.kolo.core.AutoRegisterNormalizer
 import com.fatihcure.kolo.core.ErrorNormalizer
 import com.fatihcure.kolo.core.IntermittentChoice
 import com.fatihcure.kolo.core.IntermittentDelta
@@ -19,6 +20,11 @@ import kotlinx.coroutines.flow.map
 /**
  * Normalizer implementation for OpenAI API
  */
+@AutoRegisterNormalizer(OpenAIRequest::class)
+@AutoRegisterNormalizer(OpenAIResponse::class)
+@AutoRegisterNormalizer(OpenAIStreamingResponse::class)
+@AutoRegisterNormalizer(OpenAIStreamEvent::class)
+@AutoRegisterNormalizer(OpenAIError::class)
 class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<OpenAIResponse>, StreamingNormalizer<OpenAIStreamingResponse>, ErrorNormalizer<OpenAIError> {
 
     override fun normalizeRequest(request: OpenAIRequest): IntermittentRequest {
@@ -74,6 +80,40 @@ class OpenAINormalizer : RequestNormalizer<OpenAIRequest>, ResponseNormalizer<Op
                     )
                 }
                 else -> throw IllegalArgumentException("Unknown OpenAI streaming response type: $response")
+            }
+        }
+    }
+
+    fun normalizeStreamEvent(stream: Flow<OpenAIStreamEvent>): Flow<IntermittentStreamEvent> {
+        return stream.map { event ->
+            when {
+                event.error != null -> IntermittentStreamEvent.Error(
+                    error = normalizeError(event.error!!),
+                )
+                event.choices?.isNotEmpty() == true -> {
+                    val choice = event.choices.first()
+                    when {
+                        choice.delta != null && choice.delta.role != null -> IntermittentStreamEvent.MessageStart(
+                            id = event.id ?: "",
+                            model = event.model ?: "",
+                        )
+                        choice.delta != null && choice.delta.content != null -> IntermittentStreamEvent.MessageDelta(
+                            delta = normalizeDelta(choice.delta!!),
+                        )
+                        choice.finishReason != null -> IntermittentStreamEvent.MessageEnd(
+                            finishReason = choice.finishReason,
+                            usage = event.usage?.let { normalizeUsage(it) },
+                        )
+                        else -> throw IllegalArgumentException("Unknown OpenAI streaming choice type in event: $event")
+                    }
+                }
+                event.choices.isNullOrEmpty() && event.usage != null -> {
+                    IntermittentStreamEvent.MessageEnd(
+                        finishReason = "stop", // Using 'stop' as a default for usage-only chunks
+                        usage = normalizeUsage(event.usage!!),
+                    )
+                }
+                else -> throw IllegalArgumentException("Unknown OpenAI streaming event type: $event")
             }
         }
     }

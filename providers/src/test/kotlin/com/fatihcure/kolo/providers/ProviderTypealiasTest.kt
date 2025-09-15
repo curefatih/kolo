@@ -8,7 +8,7 @@ import com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent
 import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
-import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
+import com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -36,7 +36,7 @@ class ProviderTypealiasTest {
 
         // When & Then
         // These should compile without issues, indicating correct generic type implementation
-        val openAIProviderTyped: Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamingResponse, OpenAIError> = openAIProvider
+        val openAIProviderTyped: Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> = openAIProvider
         val anthropicProviderTyped: Provider<AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError> = anthropicProvider
 
         assertThat(openAIProviderTyped).isNotNull()

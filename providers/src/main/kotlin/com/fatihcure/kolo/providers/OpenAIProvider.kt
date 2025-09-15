@@ -11,6 +11,7 @@ import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAINormalizer
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
+import com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent
 import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
 import com.fatihcure.kolo.normalizers.openai.createOpenAIStreamingHandler
 import com.fatihcure.kolo.transformers.openai.OpenAITransformer
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
 @AutoRegisterProvider(OpenAIRequest::class, OpenAIResponse::class)
 class OpenAIProvider(
     private val config: OpenAIProviderConfig = OpenAIProviderConfig.default(),
-) : Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamingResponse, OpenAIError> {
+) : Provider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> {
 
     private val normalizer = OpenAINormalizer()
     private val transformer = OpenAITransformer()
@@ -56,11 +57,11 @@ class OpenAIProvider(
     }
 
     // Streaming support
-    override fun normalizeStreamingResponse(stream: Flow<OpenAIStreamingResponse>): Flow<IntermittentStreamEvent> {
-        return normalizer.normalizeStreamingResponse(stream)
+    override fun normalizeStreamingResponse(stream: Flow<OpenAIStreamEvent>): Flow<IntermittentStreamEvent> {
+        return normalizer.normalizeStreamEvent(stream)
     }
 
-    override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamingResponse> {
+    override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamEvent> {
         return transformer.transformStreamingResponse(stream)
     }
 

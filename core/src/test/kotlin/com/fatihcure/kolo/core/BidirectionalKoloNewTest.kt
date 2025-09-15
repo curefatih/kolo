@@ -1,6 +1,7 @@
 package com.fatihcure.kolo.core
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -11,15 +12,99 @@ import org.junit.jupiter.api.Test
  */
 class BidirectionalKoloNewTest {
 
+    // Helper function to create BidirectionalKolo with same type for regular and streaming responses
+    private fun <SourceRequestType, SourceResponseType, TargetRequestType, TargetResponseType> createBidirectionalKoloWithSameStreamingTypes(
+        sourceNormalizer: Normalizer<SourceRequestType>,
+        sourceTransformer: Transformer<SourceRequestType, SourceResponseType, SourceResponseType>,
+        targetNormalizer: Normalizer<TargetResponseType>,
+        targetTransformer: Transformer<TargetRequestType, TargetResponseType, TargetResponseType>,
+    ): BidirectionalKolo<SourceRequestType, SourceResponseType, SourceResponseType, TargetRequestType, TargetResponseType, TargetResponseType> {
+        return BidirectionalKolo(
+            sourceNormalizer = sourceNormalizer,
+            sourceTransformer = sourceTransformer,
+            sourceStreamingNormalizer = sourceNormalizer as Normalizer<SourceResponseType>,
+            sourceStreamingTransformer = object : StreamingTransformer<SourceResponseType> {
+                override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<SourceResponseType> {
+                    return stream.map { event ->
+                        when (event) {
+                            is IntermittentStreamEvent.MessageStart -> sourceTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = event.id,
+                                    model = event.model,
+                                    choices = listOf(IntermittentChoice(index = 0)),
+                                ),
+                            ) as SourceResponseType
+                            is IntermittentStreamEvent.MessageDelta -> sourceTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, delta = event.delta)),
+                                ),
+                            ) as SourceResponseType
+                            is IntermittentStreamEvent.MessageEnd -> sourceTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, finishReason = event.finishReason)),
+                                    usage = event.usage,
+                                ),
+                            ) as SourceResponseType
+                            is IntermittentStreamEvent.Error -> sourceTransformer.transformError(event.error) as SourceResponseType
+                        }
+                    }
+                }
+            },
+            targetNormalizer = targetNormalizer,
+            targetTransformer = targetTransformer,
+            targetStreamingNormalizer = targetNormalizer as Normalizer<TargetResponseType>,
+            targetStreamingTransformer = object : StreamingTransformer<TargetResponseType> {
+                override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<TargetResponseType> {
+                    return stream.map { event ->
+                        when (event) {
+                            is IntermittentStreamEvent.MessageStart -> targetTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = event.id,
+                                    model = event.model,
+                                    choices = listOf(IntermittentChoice(index = 0)),
+                                ),
+                            ) as TargetResponseType
+                            is IntermittentStreamEvent.MessageDelta -> targetTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, delta = event.delta)),
+                                ),
+                            ) as TargetResponseType
+                            is IntermittentStreamEvent.MessageEnd -> targetTransformer.transformResponse(
+                                IntermittentResponse(
+                                    id = "",
+                                    model = "",
+                                    choices = listOf(IntermittentChoice(index = 0, finishReason = event.finishReason)),
+                                    usage = event.usage,
+                                ),
+                            ) as TargetResponseType
+                            is IntermittentStreamEvent.Error -> targetTransformer.transformError(event.error) as TargetResponseType
+                        }
+                    }
+                }
+            },
+        )
+    }
+
     // Mock data types for testing
     data class MockOpenAIRequest(val messages: List<MockMessage>, val model: String)
-    data class MockOpenAIResponse(val id: String, val model: String, val choices: List<MockChoice>)
+    data class MockOpenAIResponse(val id: String, val model: String, val choices: List<MockChoice>, val error: MockError? = null)
     data class MockAnthropicRequest(val messages: List<MockMessage>, val model: String)
-    data class MockAnthropicResponse(val id: String, val model: String, val content: List<MockContent>)
+    data class MockAnthropicResponse(val id: String, val model: String, val content: List<MockContent>, val usage: MockUsage? = null, val error: MockAnthropicError? = null)
 
     data class MockMessage(val role: String, val content: String)
-    data class MockChoice(val index: Int, val message: MockMessage)
-    data class MockContent(val type: String, val text: String)
+    data class MockChoice(val index: Int, val message: MockMessage? = null, val delta: MockDelta? = null, val finishReason: String? = null)
+    data class MockDelta(val role: String? = null, val content: String? = null)
+    data class MockContent(val type: String = "text", val text: String)
+    data class MockContentBlock(val type: String = "text", val text: String)
+    data class MockUsage(val inputTokens: Int, val outputTokens: Int)
+    data class MockError(val message: String)
+    data class MockAnthropicError(val message: String)
 
     @Test
     fun `should convert OpenAI request to Anthropic request`() = runBlocking {
@@ -146,7 +231,7 @@ class BidirectionalKoloNewTest {
         }
 
         // Create BidirectionalKolo instance
-        val bidirectionalKolo = BidirectionalKolo(
+        val bidirectionalKolo = createBidirectionalKoloWithSameStreamingTypes(
             sourceNormalizer = openAINormalizer,
             sourceTransformer = openAITransformer,
             targetNormalizer = anthropicNormalizer,
@@ -282,7 +367,7 @@ class BidirectionalKoloNewTest {
         }
 
         // Create BidirectionalKolo instance
-        val bidirectionalKolo = BidirectionalKolo(
+        val bidirectionalKolo = createBidirectionalKoloWithSameStreamingTypes(
             sourceNormalizer = openAINormalizer,
             sourceTransformer = openAITransformer,
             targetNormalizer = anthropicNormalizer,
@@ -303,8 +388,8 @@ class BidirectionalKoloNewTest {
         assertThat(openAIResponse.id).isEqualTo("anthropic-123")
         assertThat(openAIResponse.model).isEqualTo("claude-3")
         assertThat(openAIResponse.choices).hasSize(1)
-        assertThat(openAIResponse.choices[0].message.role).isEqualTo("assistant")
-        assertThat(openAIResponse.choices[0].message.content).isEqualTo("I'm doing well, thank you for asking!")
+        assertThat(openAIResponse.choices[0].message?.role).isEqualTo("assistant")
+        assertThat(openAIResponse.choices[0].message?.content).isEqualTo("I'm doing well, thank you for asking!")
     }
 
     @Test
@@ -428,11 +513,37 @@ class BidirectionalKoloNewTest {
         }
 
         // Use builder pattern
-        val bidirectionalKolo = bidirectionalKoloBuilder<MockOpenAIRequest, MockOpenAIResponse, MockAnthropicRequest, MockAnthropicResponse>()
+        val bidirectionalKolo = bidirectionalKoloBuilder<MockOpenAIRequest, MockOpenAIResponse, MockOpenAIResponse, MockAnthropicRequest, MockAnthropicResponse, MockAnthropicResponse>()
             .withSourceNormalizer(openAINormalizer)
             .withSourceTransformer(openAITransformer)
+            .withSourceStreamingNormalizer(openAINormalizer as Normalizer<MockOpenAIResponse>)
+            .withSourceStreamingTransformer(object : StreamingTransformer<MockOpenAIResponse> {
+                override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<MockOpenAIResponse> {
+                    return stream.map { event ->
+                        when (event) {
+                            is IntermittentStreamEvent.MessageStart -> MockOpenAIResponse(id = event.id, model = event.model, choices = emptyList())
+                            is IntermittentStreamEvent.MessageDelta -> MockOpenAIResponse(id = "", model = "", choices = listOf(MockChoice(index = 0, delta = MockDelta(content = event.delta.content))))
+                            is IntermittentStreamEvent.MessageEnd -> MockOpenAIResponse(id = "", model = "", choices = listOf(MockChoice(index = 0, finishReason = event.finishReason)))
+                            is IntermittentStreamEvent.Error -> MockOpenAIResponse(id = "", model = "", choices = emptyList(), error = MockError(message = event.error.message))
+                        }
+                    }
+                }
+            })
             .withTargetNormalizer(anthropicNormalizer)
             .withTargetTransformer(anthropicTransformer)
+            .withTargetStreamingNormalizer(anthropicNormalizer as Normalizer<MockAnthropicResponse>)
+            .withTargetStreamingTransformer(object : StreamingTransformer<MockAnthropicResponse> {
+                override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<MockAnthropicResponse> {
+                    return stream.map { event ->
+                        when (event) {
+                            is IntermittentStreamEvent.MessageStart -> MockAnthropicResponse(id = event.id, model = event.model, content = emptyList())
+                            is IntermittentStreamEvent.MessageDelta -> MockAnthropicResponse(id = "", model = "", content = listOf(MockContent(text = event.delta.content ?: "")))
+                            is IntermittentStreamEvent.MessageEnd -> MockAnthropicResponse(id = "", model = "", content = emptyList(), usage = event.usage?.let { MockUsage(inputTokens = it.promptTokens, outputTokens = it.completionTokens) })
+                            is IntermittentStreamEvent.Error -> MockAnthropicResponse(id = "", model = "", content = emptyList(), error = MockAnthropicError(message = event.error.message))
+                        }
+                    }
+                }
+            })
             .build()
 
         // Test request conversion

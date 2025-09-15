@@ -1,5 +1,6 @@
 package com.fatihcure.kolo.normalizers.anthropic
 
+import com.fatihcure.kolo.core.AutoRegisterNormalizer
 import com.fatihcure.kolo.core.ErrorNormalizer
 import com.fatihcure.kolo.core.IntermittentChoice
 import com.fatihcure.kolo.core.IntermittentDelta
@@ -23,6 +24,10 @@ import kotlinx.coroutines.flow.map
 /**
  * Normalizer implementation for Anthropic Claude API
  */
+@AutoRegisterNormalizer(AnthropicRequest::class)
+@AutoRegisterNormalizer(AnthropicResponse::class)
+@AutoRegisterNormalizer(AnthropicStreamEvent::class)
+@AutoRegisterNormalizer(AnthropicError::class)
 class AnthropicNormalizer : RequestNormalizer<AnthropicRequest>, ResponseNormalizer<AnthropicResponse>, StreamingNormalizer<AnthropicStreamEvent>, ErrorNormalizer<AnthropicError> {
 
     override fun normalizeRequest(request: AnthropicRequest): IntermittentRequest {
