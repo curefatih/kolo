@@ -112,7 +112,7 @@ class StreamingService {
             .asFlow() // Convert to Kotlin Flow
         
         // Use Kolo to process streaming data
-        val processedStream = kolo.processSourceStreamingToTargetStreaming(rawStream)
+        val processedStream = kolo.processRawStreamingThroughConversion(rawStream)
             .asFlux() // Convert back to Reactor Flux
             .map { streamEvent ->
                 // Convert stream event to SSE format
@@ -210,7 +210,7 @@ val rawStream = webClient
     .asFlow()
 
 // Use Kolo to process the streaming data
-val processedStream = kolo.processSourceStreamingToTargetStreaming(rawStream)
+val processedStream = kolo.processRawStreamingThroughConversion(rawStream)
     .asFlux()
     .map { streamEvent ->
         // Convert to your desired output format
@@ -267,7 +267,7 @@ val kolo = koloProvider.createKolo<
 Kolo provides built-in error handling for streaming operations:
 
 ```kotlin
-val processedStream = kolo.processSourceStreamingToTargetStreaming(rawStream)
+val processedStream = kolo.processRawStreamingThroughConversion(rawStream)
     .asFlux()
     .map { streamEvent ->
         ServerSentEvent.builder(streamEvent.toString()).build()
@@ -322,7 +322,7 @@ Kolo provides comprehensive error handling:
 ### Error Recovery Strategies
 
 ```kotlin
-val processedStream = kolo.processSourceStreamingToTargetStreaming(rawStream)
+val processedStream = kolo.processRawStreamingThroughConversion(rawStream)
     .asFlux()
     .retry(3) // Retry up to 3 times
     .onErrorResume { error ->
