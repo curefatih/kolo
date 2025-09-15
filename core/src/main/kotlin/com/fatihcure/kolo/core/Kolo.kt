@@ -59,7 +59,7 @@ class Kolo<
     }
 
     fun processSourceStreamingToTargetStreaming(rawStream: Flow<String>): Flow<TargetStreamingResponseType> {
-        val flow = sourceProvider.processStreamingData(rawStream)
-        return targetProvider.processStreamingDataToStreamEvent(flow)
+        return sourceProvider.processStreamingData(rawStream)
+            .let { targetProvider.processStreamingDataToStreamEvent(it) }
     }
 }
