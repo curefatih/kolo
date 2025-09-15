@@ -17,7 +17,7 @@ import com.fatihcure.kolo.normalizers.openai.OpenAIError
 import com.fatihcure.kolo.normalizers.openai.OpenAIMessage
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
-import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
+import com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent
 import com.fatihcure.kolo.normalizers.openai.OpenAIUsage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,8 +25,8 @@ import kotlinx.coroutines.flow.map
 /**
  * Transformer implementation for OpenAI API
  */
-@AutoRegisterStreamingTransformer(OpenAIStreamingResponse::class)
-class OpenAITransformer : CombinedTransformer<OpenAIRequest, OpenAIResponse, OpenAIError, OpenAIStreamingResponse> {
+@AutoRegisterStreamingTransformer(OpenAIStreamEvent::class)
+class OpenAITransformer : CombinedTransformer<OpenAIRequest, OpenAIResponse, OpenAIError, OpenAIStreamEvent> {
 
     override fun transformRequest(request: IntermittentRequest): OpenAIRequest {
         return OpenAIRequest(
@@ -51,31 +51,31 @@ class OpenAITransformer : CombinedTransformer<OpenAIRequest, OpenAIResponse, Ope
         )
     }
 
-    override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamingResponse> {
+    override fun transformStreamingResponse(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamEvent> {
         return stream.map { event ->
             when (event) {
-                is IntermittentStreamEvent.MessageStart -> OpenAIStreamingResponse(
+                is IntermittentStreamEvent.MessageStart -> OpenAIStreamEvent(
                     id = event.id,
                     model = event.model,
                 )
-                is IntermittentStreamEvent.MessageDelta -> OpenAIStreamingResponse(
+                is IntermittentStreamEvent.MessageDelta -> OpenAIStreamEvent(
                     choices = listOf(
-                        com.fatihcure.kolo.normalizers.openai.OpenAIStreamingChoice(
+                        OpenAIChoice(
                             index = 0,
-                            delta = transformStreamingDelta(event.delta),
+                            delta = transformDelta(event.delta),
                         ),
                     ),
                 )
-                is IntermittentStreamEvent.MessageEnd -> OpenAIStreamingResponse(
+                is IntermittentStreamEvent.MessageEnd -> OpenAIStreamEvent(
                     choices = listOf(
-                        com.fatihcure.kolo.normalizers.openai.OpenAIStreamingChoice(
+                        OpenAIChoice(
                             index = 0,
                             finishReason = event.finishReason,
                         ),
                     ),
                     usage = event.usage?.let { transformUsage(it) },
                 )
-                is IntermittentStreamEvent.Error -> OpenAIStreamingResponse(
+                is IntermittentStreamEvent.Error -> OpenAIStreamEvent(
                     error = transformError(event.error),
                 )
             }

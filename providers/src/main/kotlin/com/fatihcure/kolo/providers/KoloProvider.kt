@@ -42,24 +42,24 @@ class KoloProvider {
             anthropicProvider,
         )
 
-        // Register normalizers for streaming response types
+        // Register normalizers for streaming event types
         val openAINormalizer = com.fatihcure.kolo.normalizers.openai.OpenAINormalizer()
-        val openAIStreamingNormalizer = object : com.fatihcure.kolo.core.Normalizer<com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse> {
-            override fun normalizeRequest(request: com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse): com.fatihcure.kolo.core.IntermittentRequest {
-                throw UnsupportedOperationException("Streaming responses don't have requests")
+        val openAIStreamingNormalizer = object : com.fatihcure.kolo.core.Normalizer<com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent> {
+            override fun normalizeRequest(request: com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent): com.fatihcure.kolo.core.IntermittentRequest {
+                throw UnsupportedOperationException("Streaming events don't have requests")
             }
-            override fun normalizeResponse(response: com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse): com.fatihcure.kolo.core.IntermittentResponse {
-                throw UnsupportedOperationException("Use normalizeStreamingResponse for streaming responses")
+            override fun normalizeResponse(response: com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent): com.fatihcure.kolo.core.IntermittentResponse {
+                throw UnsupportedOperationException("Use normalizeStreamingResponse for streaming events")
             }
-            override fun normalizeStreamingResponse(stream: kotlinx.coroutines.flow.Flow<com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse>): kotlinx.coroutines.flow.Flow<com.fatihcure.kolo.core.IntermittentStreamEvent> {
-                return openAINormalizer.normalizeStreamingResponse(stream)
+            override fun normalizeStreamingResponse(stream: kotlinx.coroutines.flow.Flow<com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent>): kotlinx.coroutines.flow.Flow<com.fatihcure.kolo.core.IntermittentStreamEvent> {
+                return openAINormalizer.normalizeStreamEvent(stream)
             }
-            override fun normalizeError(error: com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse): com.fatihcure.kolo.core.IntermittentError {
-                throw UnsupportedOperationException("Use normalizeStreamingResponse for streaming responses")
+            override fun normalizeError(error: com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent): com.fatihcure.kolo.core.IntermittentError {
+                throw UnsupportedOperationException("Use normalizeStreamingResponse for streaming events")
             }
         }
         GlobalProviderAutoRegistration.registerNormalizer(
-            com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse::class,
+            com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent::class,
             openAIStreamingNormalizer,
         )
 
@@ -83,11 +83,11 @@ class KoloProvider {
             anthropicStreamingNormalizer,
         )
 
-        // Register streaming transformers for streaming response types
+        // Register streaming transformers for streaming event types
         val openAITransformer = com.fatihcure.kolo.transformers.openai.OpenAITransformer()
         GlobalProviderAutoRegistration.registerStreamingTransformer(
-            com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse::class,
-            openAITransformer as com.fatihcure.kolo.core.StreamingTransformer<com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse>,
+            com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent::class,
+            openAITransformer as com.fatihcure.kolo.core.StreamingTransformer<com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent>,
         )
 
         val anthropicTransformer = com.fatihcure.kolo.transformers.anthropic.AnthropicTransformer()

@@ -8,6 +8,7 @@ import com.fatihcure.kolo.normalizers.openai.OpenAIChoice
 import com.fatihcure.kolo.normalizers.openai.OpenAIMessage
 import com.fatihcure.kolo.normalizers.openai.OpenAIRequest
 import com.fatihcure.kolo.normalizers.openai.OpenAIResponse
+import com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent
 import com.fatihcure.kolo.normalizers.openai.OpenAIUsage
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -146,12 +147,12 @@ class OpenAIProviderTest {
     @Test
     fun `should normalize streaming response`() = runBlocking {
         // Given
-        val openAIStreamingResponse = com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse(
+        val openAIStreamEvent = com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent(
             id = "test-id",
             model = "gpt-3.5-turbo",
             choices = emptyList(),
         )
-        val stream = flowOf(openAIStreamingResponse)
+        val stream = flowOf(openAIStreamEvent)
 
         // When
         val result = openAIProvider.normalizeStreamingResponse(stream).first()

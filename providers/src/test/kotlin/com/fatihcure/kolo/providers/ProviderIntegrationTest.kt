@@ -95,7 +95,7 @@ class ProviderIntegrationTest {
         val bidirectionalKolo = koloProvider.createBidirectionalKolo(
             OpenAIRequest::class,
             OpenAIResponse::class,
-            com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse::class,
+            com.fatihcure.kolo.normalizers.openai.OpenAIStreamEvent::class,
             AnthropicRequest::class,
             AnthropicResponse::class,
             com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent::class,
