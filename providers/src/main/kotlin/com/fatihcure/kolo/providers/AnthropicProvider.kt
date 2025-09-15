@@ -5,7 +5,7 @@ import com.fatihcure.kolo.core.IntermittentError
 import com.fatihcure.kolo.core.IntermittentRequest
 import com.fatihcure.kolo.core.IntermittentResponse
 import com.fatihcure.kolo.core.IntermittentStreamEvent
-import com.fatihcure.kolo.core.Provider
+import com.fatihcure.kolo.core.StreamingProvider
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicError
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicNormalizer
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
  * Anthropic provider implementation that combines normalizer and transformer
  */
 @AutoRegisterProvider(AnthropicRequest::class, AnthropicResponse::class)
-class AnthropicProvider : Provider<AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError> {
+class AnthropicProvider : StreamingProvider<AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError> {
 
     private val normalizer = AnthropicNormalizer()
     private val transformer = AnthropicTransformer()
@@ -57,5 +57,22 @@ class AnthropicProvider : Provider<AnthropicRequest, AnthropicResponse, Anthropi
 
     override fun transformError(error: IntermittentError): AnthropicError {
         return transformer.transformError(error)
+    }
+
+    // StreamingProvider specific methods
+    override fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
+        // This would need to be implemented based on the specific streaming format
+        // For now, we'll throw an error indicating it needs implementation
+        throw NotImplementedError("processStreamingData needs to be implemented for Anthropic streaming format")
+    }
+
+    override fun processStreamingDataToStreamEvent(stream: Flow<IntermittentStreamEvent>): Flow<AnthropicStreamEvent> {
+        return transformer.transformStreamingResponse(stream)
+    }
+
+    override fun processStreamingDataToStreamEvent(rawStream: Flow<String>): Flow<AnthropicStreamEvent> {
+        // This would need to be implemented based on the specific streaming format
+        // For now, we'll throw an error indicating it needs implementation
+        throw NotImplementedError("processStreamingDataToStreamEvent needs to be implemented for Anthropic streaming format")
     }
 }

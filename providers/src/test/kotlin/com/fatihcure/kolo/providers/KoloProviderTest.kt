@@ -1,6 +1,5 @@
 package com.fatihcure.kolo.providers
 
-import com.fatihcure.kolo.core.BidirectionalKolo
 import com.fatihcure.kolo.core.Kolo
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicRequest
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse

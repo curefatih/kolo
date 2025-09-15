@@ -66,7 +66,7 @@ class OpenAIProvider(
     }
 
     override fun processStreamingDataToStreamEvent(stream: Flow<IntermittentStreamEvent>): Flow<OpenAIStreamEvent> {
-        TODO("Not yet implemented")
+        return transformer.transformStreamingResponse(stream)
     }
 
     /**
