@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import kotlin.reflect.KClass
 
 class KoloTest {
 
@@ -32,6 +33,10 @@ class KoloTest {
 
     private fun createTestProvider(): StreamingProvider<String, String, String, String> {
         return object : StreamingProvider<String, String, String, String> {
+            override val requestType: KClass<out String> = String::class
+            override val responseType: KClass<out String> = String::class
+            override val streamingResponseType: KClass<out String> = String::class
+            override val errorType: KClass<out String> = String::class
             override fun normalizeRequest(request: String): IntermittentRequest {
                 return IntermittentRequest(
                     messages = listOf(

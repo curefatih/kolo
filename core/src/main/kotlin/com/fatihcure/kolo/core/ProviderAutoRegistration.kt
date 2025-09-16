@@ -39,7 +39,13 @@ annotation class AutoRegisterProvider(val requestType: KClass<*>, val responseTy
  * Provider interface that combines normalizer and transformer functionality
  * for both request and response types
  */
-interface Provider<RequestType, ResponseType, StreamEventType, ErrorType> {
+interface Provider<RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> {
+
+    // Type information for compile-time safety
+    val requestType: KClass<out RequestType>
+    val responseType: KClass<out ResponseType>
+    val streamingResponseType: KClass<out StreamEventType>
+    val errorType: KClass<out ErrorType>
 
     // Request normalization and transformation
     fun normalizeRequest(request: RequestType): IntermittentRequest
@@ -63,7 +69,7 @@ interface Provider<RequestType, ResponseType, StreamEventType, ErrorType> {
  * This interface extends the base Provider interface with methods to handle raw streaming data
  * from HTTP responses (like Server-Sent Events) and convert them to the appropriate format
  */
-interface StreamingProvider<RequestType, ResponseType, StreamEventType, ErrorType> :
+interface StreamingProvider<RequestType : Any, ResponseType : Any, StreamEventType : Any, ErrorType : Any> :
     Provider<RequestType, ResponseType, StreamEventType, ErrorType> {
 
     /**

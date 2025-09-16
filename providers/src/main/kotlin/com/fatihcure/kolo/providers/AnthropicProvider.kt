@@ -13,12 +13,19 @@ import com.fatihcure.kolo.normalizers.anthropic.AnthropicResponse
 import com.fatihcure.kolo.normalizers.anthropic.AnthropicStreamEvent
 import com.fatihcure.kolo.transformers.anthropic.AnthropicTransformer
 import kotlinx.coroutines.flow.Flow
+import kotlin.reflect.KClass
 
 /**
  * Anthropic provider implementation that combines normalizer and transformer
  */
 @AutoRegisterProvider(AnthropicRequest::class, AnthropicResponse::class)
 class AnthropicProvider : StreamingProvider<AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError> {
+
+    // Type information for compile-time safety
+    override val requestType: KClass<AnthropicRequest> = AnthropicRequest::class
+    override val responseType: KClass<AnthropicResponse> = AnthropicResponse::class
+    override val streamingResponseType: KClass<AnthropicStreamEvent> = AnthropicStreamEvent::class
+    override val errorType: KClass<AnthropicError> = AnthropicError::class
 
     private val normalizer = AnthropicNormalizer()
     private val transformer = AnthropicTransformer()

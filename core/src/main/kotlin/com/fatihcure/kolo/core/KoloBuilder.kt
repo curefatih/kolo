@@ -4,14 +4,14 @@ package com.fatihcure.kolo.core
  * Builder class for creating Kolo instances
  */
 class KoloBuilder<
-    SourceRequestType,
-    SourceResponseType,
-    SourceStreamingResponseType,
-    SourceErrorType,
-    TargetRequestType,
-    TargetResponseType,
-    TargetStreamingResponseType,
-    TargetErrorType,
+    SourceRequestType : Any,
+    SourceResponseType : Any,
+    SourceStreamingResponseType : Any,
+    SourceErrorType : Any,
+    TargetRequestType : Any,
+    TargetResponseType : Any,
+    TargetStreamingResponseType : Any,
+    TargetErrorType : Any,
     > {
     private var sourceProvider: StreamingProvider<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType>? = null
     private var targetProvider: StreamingProvider<TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>? = null
@@ -38,14 +38,14 @@ class KoloBuilder<
  * Factory function for creating Kolo instances
  */
 fun <
-    SourceRequestType,
-    SourceResponseType,
-    SourceStreamingResponseType,
-    SourceErrorType,
-    TargetRequestType,
-    TargetResponseType,
-    TargetStreamingResponseType,
-    TargetErrorType,
+    SourceRequestType : Any,
+    SourceResponseType : Any,
+    SourceStreamingResponseType : Any,
+    SourceErrorType : Any,
+    TargetRequestType : Any,
+    TargetResponseType : Any,
+    TargetStreamingResponseType : Any,
+    TargetErrorType : Any,
     > kolo(
     sourceProvider: StreamingProvider<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType>,
     targetProvider: StreamingProvider<TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>,
@@ -57,14 +57,14 @@ fun <
  * Factory function for creating KoloBuilder instances
  */
 fun <
-    SourceRequestType,
-    SourceResponseType,
-    SourceStreamingResponseType,
-    SourceErrorType,
-    TargetRequestType,
-    TargetResponseType,
-    TargetStreamingResponseType,
-    TargetErrorType,
+    SourceRequestType : Any,
+    SourceResponseType : Any,
+    SourceStreamingResponseType : Any,
+    SourceErrorType : Any,
+    TargetRequestType : Any,
+    TargetResponseType : Any,
+    TargetStreamingResponseType : Any,
+    TargetErrorType : Any,
     > koloBuilder(): KoloBuilder<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType> {
     return KoloBuilder()
 }
