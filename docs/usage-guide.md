@@ -23,6 +23,8 @@ Kolo provides a unified interface for converting between different LLM providers
 - **Error Handling**: Built-in error handling and recovery
 - **Streaming Support**: Native support for streaming responses
 - **Provider Class Registration**: Simple registration using provider classes instead of request types
+- **Full Compile-Time Safety**: Provider-instance approach eliminates runtime casting and type erasure issues
+- **Cleaner API**: No need to specify complex type parameters manually
 
 ## Migration from Manual Streaming
 
@@ -85,16 +87,9 @@ With Kolo, the same functionality becomes much simpler:
 class StreamingService {
     
     private val koloProvider = KoloProvider()
-    private val kolo = koloProvider.createKolo<
-        OpenAIRequest, 
-        OpenAIResponse, 
-        OpenAIStreamEvent, 
-        OpenAIError,
-        AnthropicRequest, 
-        AnthropicResponse, 
-        AnthropicStreamEvent, 
-        AnthropicError
-    >(OpenAIProvider::class, AnthropicProvider::class)
+    private val openAIProvider = OpenAIProvider()
+    private val anthropicProvider = AnthropicProvider()
+    private val kolo = koloProvider.createKolo(openAIProvider, anthropicProvider)
     
     private fun handleStreamingRequest(
         request: OpenAIRequest
@@ -155,12 +150,19 @@ GlobalProviderAutoRegistration.registerProvider(CustomProvider::class, customPro
 
 ### 2. Setting Up Kolo
 
-First, create a Kolo instance with your desired source and target providers. Note that we now use provider classes instead of request types:
+First, create a Kolo instance with your desired source and target providers. You can use either the provider-instance approach (recommended) or the KClass-based approach:
 
 ```kotlin
-// Using the KoloProvider helper
+// Recommended: Provider-instance approach (full compile-time safety)
 val koloProvider = KoloProvider()
-val kolo = koloProvider.createKolo<
+val openAIProvider = OpenAIProvider()
+val anthropicProvider = AnthropicProvider()
+
+// Full compile-time safety, no casting needed
+val kolo = koloProvider.createKolo(openAIProvider, anthropicProvider)
+
+// Alternative: KClass-based approach
+val koloClassBased = koloProvider.createKolo<
     OpenAIRequest, 
     OpenAIResponse, 
     OpenAIStreamEvent, 
@@ -172,7 +174,7 @@ val kolo = koloProvider.createKolo<
 >(OpenAIProvider::class, AnthropicProvider::class)
 
 // Or using the builder pattern
-val kolo = kolo<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError, 
+val koloBuilder = kolo<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError, 
                 AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError> {
     withSourceProvider(OpenAIProvider())
     withTargetProvider(AnthropicProvider())
@@ -197,6 +199,24 @@ val targetRequest = kolo.convertSourceRequestToTarget(sourceRequest)
 // Convert a response from target to source format
 val targetResponse = AnthropicResponse(/* ... */)
 val sourceResponse = kolo.convertTargetResponseToSource(targetResponse)
+```
+
+### 5. Accessing Type Information
+
+With the provider-instance approach, you can access type information at runtime:
+
+```kotlin
+val openAIProvider = OpenAIProvider()
+
+// Access type information
+println("Request Type: ${openAIProvider.requestType}")
+println("Response Type: ${openAIProvider.responseType}")
+println("Streaming Type: ${openAIProvider.streamingResponseType}")
+println("Error Type: ${openAIProvider.errorType}")
+
+// Use type information for dynamic operations
+val requestType: KClass<out OpenAIRequest> = openAIProvider.requestType
+val responseType: KClass<out OpenAIResponse> = openAIProvider.responseType
 ```
 
 ## Streaming Conversion
@@ -235,14 +255,23 @@ val processedStream = kolo.processRawStreamingThroughConversion(rawStream)
 Kolo supports conversion between any registered providers:
 
 ```kotlin
+// Recommended: Provider-instance approach
+val openAIProvider = OpenAIProvider()
+val anthropicProvider = AnthropicProvider()
+
 // OpenAI to Anthropic
-val openaiToAnthropic = koloProvider.createKolo<
+val openaiToAnthropic = koloProvider.createKolo(openAIProvider, anthropicProvider)
+
+// Anthropic to OpenAI
+val anthropicToOpenAI = koloProvider.createKolo(anthropicProvider, openAIProvider)
+
+// Alternative: KClass-based approach
+val openaiToAnthropicClass = koloProvider.createKolo<
     OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError,
     AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError
 >(OpenAIProvider::class, AnthropicProvider::class)
 
-// Anthropic to OpenAI
-val anthropicToOpenAI = koloProvider.createKolo<
+val anthropicToOpenAIClass = koloProvider.createKolo<
     AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError,
     OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError
 >(AnthropicProvider::class, OpenAIProvider::class)
@@ -256,6 +285,12 @@ If you have a custom provider, you can integrate it with Kolo:
 
 ```kotlin
 class CustomProvider : StreamingProvider<CustomRequest, CustomResponse, CustomStreamEvent, CustomError> {
+    // Type information for compile-time safety
+    override val requestType: KClass<out CustomRequest> = CustomRequest::class
+    override val responseType: KClass<out CustomResponse> = CustomResponse::class
+    override val streamingResponseType: KClass<out CustomStreamEvent> = CustomStreamEvent::class
+    override val errorType: KClass<out CustomError> = CustomError::class
+    
     // Implement the required methods
     override fun processStreamingData(rawStream: Flow<String>): Flow<IntermittentStreamEvent> {
         // Your custom streaming processing logic
@@ -268,7 +303,12 @@ class CustomProvider : StreamingProvider<CustomRequest, CustomResponse, CustomSt
 val customProvider = CustomProvider()
 GlobalProviderAutoRegistration.registerProvider(CustomProvider::class, customProvider)
 
-val kolo = koloProvider.createKolo<
+// Recommended: Provider-instance approach
+val openAIProvider = OpenAIProvider()
+val kolo = koloProvider.createKolo(customProvider, openAIProvider)
+
+// Alternative: KClass-based approach
+val koloClassBased = koloProvider.createKolo<
     CustomRequest, CustomResponse, CustomStreamEvent, CustomError,
     OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError
 >(CustomProvider::class, OpenAIProvider::class)
@@ -347,13 +387,46 @@ val processedStream = kolo.processRawStreamingThroughConversion(rawStream)
     }
 ```
 
+## Provider-Instance vs KClass Approach
+
+### Provider-Instance Approach (Recommended)
+
+**Benefits:**
+- **Full Compile-Time Safety**: No runtime casting or type erasure issues
+- **Cleaner API**: No need to specify complex type parameters manually
+- **Better IDE Support**: Full autocomplete and type checking
+- **Runtime Type Information**: Access to provider type information at runtime
+- **Easier to Use**: More intuitive and less error-prone
+
+**Usage:**
+```kotlin
+val openAIProvider = OpenAIProvider()
+val anthropicProvider = AnthropicProvider()
+val kolo = koloProvider.createKolo(openAIProvider, anthropicProvider)
+```
+
+### KClass-Based Approach (Legacy)
+
+**Benefits:**
+- **Familiar**: Similar to existing reflection-based patterns
+- **Flexible**: Can work with provider classes without instances
+
+**Usage:**
+```kotlin
+val kolo = koloProvider.createKolo<
+    OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError,
+    AnthropicRequest, AnthropicResponse, AnthropicStreamEvent, AnthropicError
+>(OpenAIProvider::class, AnthropicProvider::class)
+```
+
 ## Best Practices
 
-1. **Reuse Kolo Instances**: Create Kolo instances once and reuse them
-2. **Handle Errors Gracefully**: Always provide fallback behavior for streaming errors
-3. **Monitor Performance**: Use appropriate buffer sizes for your use case
-4. **Type Safety**: Leverage Kotlin's type system for compile-time safety
-5. **Testing**: Test your streaming conversions with various data formats
+1. **Use Provider-Instance Approach**: Prefer the provider-instance approach for better type safety and cleaner code
+2. **Reuse Kolo Instances**: Create Kolo instances once and reuse them
+3. **Handle Errors Gracefully**: Always provide fallback behavior for streaming errors
+4. **Monitor Performance**: Use appropriate buffer sizes for your use case
+5. **Type Safety**: Leverage Kotlin's type system for compile-time safety
+6. **Testing**: Test your streaming conversions with various data formats
 
 ## Conclusion
 

@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.reflect.KClass
 
 class GenericProviderFactoryTest {
 
@@ -21,6 +22,10 @@ class GenericProviderFactoryTest {
     fun `should create kolo instance when providers are registered`() {
         // Register a streaming provider
         val provider = object : StreamingProvider<String, String, String, String> {
+            override val requestType: KClass<out String> = String::class
+            override val responseType: KClass<out String> = String::class
+            override val streamingResponseType: KClass<out String> = String::class
+            override val errorType: KClass<out String> = String::class
             override fun normalizeRequest(request: String): IntermittentRequest {
                 return IntermittentRequest(
                     messages = listOf(
@@ -154,6 +159,10 @@ class GenericProviderFactoryTest {
 
     private fun createTestProvider(): StreamingProvider<String, String, String, String> {
         return object : StreamingProvider<String, String, String, String> {
+            override val requestType: KClass<out String> = String::class
+            override val responseType: KClass<out String> = String::class
+            override val streamingResponseType: KClass<out String> = String::class
+            override val errorType: KClass<out String> = String::class
             override fun normalizeRequest(request: String): IntermittentRequest =
                 IntermittentRequest(messages = emptyList(), model = "test")
             override fun transformRequest(request: IntermittentRequest): String = ""

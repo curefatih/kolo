@@ -3,6 +3,7 @@ package com.fatihcure.kolo.providers
 import com.fatihcure.kolo.core.GlobalProviderAutoRegistration
 import com.fatihcure.kolo.core.GlobalProviderFactory
 import com.fatihcure.kolo.core.Kolo
+import com.fatihcure.kolo.core.StreamingProvider
 import kotlin.reflect.KClass
 
 /**
@@ -44,6 +45,36 @@ class KoloProvider {
         targetProviderType: KClass<*>,
     ): Kolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType> {
         return factory.createKolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>(sourceProviderType, targetProviderType)
+    }
+
+    /**
+     * Creates a Kolo instance for converting between different providers using provider instances
+     * This provides full compile-time safety without casting
+     */
+    inline fun <
+        reified SP : StreamingProvider<SReq, SRes, SStream, SErr>,
+        SReq : Any,
+        SRes : Any,
+        SStream : Any,
+        SErr : Any,
+        reified TP : StreamingProvider<TReq, TRes, TStream, TErr>,
+        TReq : Any,
+        TRes : Any,
+        TStream : Any,
+        TErr : Any,
+        > createKolo(
+        source: SP,
+        target: TP,
+    ): Kolo<SReq, SRes, SStream, SErr, TReq, TRes, TStream, TErr> {
+        // Get runtime KClass from provider instances
+        val sourceClass = source::class
+        val targetClass = target::class
+
+        // Use the existing factory method with KClass parameters
+        return factory.createKolo<SReq, SRes, SStream, SErr, TReq, TRes, TStream, TErr>(
+            sourceClass,
+            targetClass,
+        )
     }
 
     /**

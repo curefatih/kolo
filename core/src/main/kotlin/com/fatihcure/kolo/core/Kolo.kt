@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.Flow
  * using the intermittent format as an intermediary
  */
 class Kolo<
-    SourceRequestType,
-    SourceResponseType,
-    SourceStreamingResponseType,
-    SourceErrorType,
-    TargetRequestType,
-    TargetResponseType,
-    TargetStreamingResponseType,
-    TargetErrorType,
+    SourceRequestType : Any,
+    SourceResponseType : Any,
+    SourceStreamingResponseType : Any,
+    SourceErrorType : Any,
+    TargetRequestType : Any,
+    TargetResponseType : Any,
+    TargetStreamingResponseType : Any,
+    TargetErrorType : Any,
     >(
     private val sourceProvider: StreamingProvider<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType>,
     private val targetProvider: StreamingProvider<TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>,

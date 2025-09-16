@@ -15,6 +15,7 @@ import com.fatihcure.kolo.normalizers.openai.OpenAIStreamingResponse
 import com.fatihcure.kolo.normalizers.openai.createOpenAIStreamingHandler
 import com.fatihcure.kolo.transformers.openai.OpenAITransformer
 import kotlinx.coroutines.flow.Flow
+import kotlin.reflect.KClass
 
 /**
  * OpenAI provider implementation that combines normalizer and transformer
@@ -23,6 +24,12 @@ import kotlinx.coroutines.flow.Flow
 class OpenAIProvider(
     private val config: OpenAIProviderConfig = OpenAIProviderConfig.default(),
 ) : StreamingProvider<OpenAIRequest, OpenAIResponse, OpenAIStreamEvent, OpenAIError> {
+
+    // Type information for compile-time safety
+    override val requestType: KClass<OpenAIRequest> = OpenAIRequest::class
+    override val responseType: KClass<OpenAIResponse> = OpenAIResponse::class
+    override val streamingResponseType: KClass<OpenAIStreamEvent> = OpenAIStreamEvent::class
+    override val errorType: KClass<OpenAIError> = OpenAIError::class
 
     private val normalizer = OpenAINormalizer()
     private val transformer = OpenAITransformer()

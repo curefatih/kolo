@@ -26,6 +26,31 @@ class GenericProviderFactory(private val registry: ProviderRegistry) {
     }
 
     /**
+     * Create a Kolo instance for converting between different providers using provider instances
+     * This provides full compile-time safety without casting
+     */
+    fun <SourceRequestType : Any, SourceResponseType : Any, SourceStreamingResponseType : Any, SourceErrorType : Any, TargetRequestType : Any, TargetResponseType : Any, TargetStreamingResponseType : Any, TargetErrorType : Any> createKolo(
+        sourceProviderType: KClass<*>,
+        targetProviderType: KClass<*>,
+        _sourceRequestType: KClass<SourceRequestType>,
+        _sourceResponseType: KClass<SourceResponseType>,
+        _sourceStreamingResponseType: KClass<SourceStreamingResponseType>,
+        _sourceErrorType: KClass<SourceErrorType>,
+        _targetRequestType: KClass<TargetRequestType>,
+        _targetResponseType: KClass<TargetResponseType>,
+        _targetStreamingResponseType: KClass<TargetStreamingResponseType>,
+        _targetErrorType: KClass<TargetErrorType>,
+    ): Kolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType> {
+        val sourceProvider = registry.getProvider<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType>(sourceProviderType)
+            ?: throw IllegalArgumentException("No provider found for source type: ${sourceProviderType.simpleName}")
+
+        val targetProvider = registry.getProvider<TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>(targetProviderType)
+            ?: throw IllegalArgumentException("No provider found for target type: ${targetProviderType.simpleName}")
+
+        return Kolo<SourceRequestType, SourceResponseType, SourceStreamingResponseType, SourceErrorType, TargetRequestType, TargetResponseType, TargetStreamingResponseType, TargetErrorType>(sourceProvider, targetProvider)
+    }
+
+    /**
      * Check if a conversion is possible from source to target
      */
     fun canConvert(
