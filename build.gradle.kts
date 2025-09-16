@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "com.fatihcure.kolo"
-    version = "1.6.1"
+    version = "1.7.0"
     
     repositories {
         mavenCentral()
